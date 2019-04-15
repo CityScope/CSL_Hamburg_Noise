@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "features": [{"geometry": {"type": "LineString", "coordinates": [[567827.8511649532, 5932218.639718378], [567180.2045240735, 5931026.043841634]]}, "type": "Feature", "properties": {"eisenbahn": 0, "fuss": 1, "hauptverk": 1, "sonderform": 0, "hauptsaml": 0, "anlieger": 0, "id": 1, "name": "hauptverkehrsstrasse"}, "id": 0}]}
