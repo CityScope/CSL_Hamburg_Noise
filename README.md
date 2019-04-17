@@ -46,3 +46,49 @@ https://github.com/Ifsttar/NoiseModelling/wiki/02-Quick-Start#compute-the-global
 ## Further help
 
 https://github.com/Ifsttar/NoiseModelling/wiki
+
+
+## Input & Output illustration
+The input is divided into static inputs and design inputs. 
+Static inputs are globally set and not possible to be altered by city scope user
+Design inputs are expected from city scope user.
+###The input is divided into static inputs 
+1) upper main road 
+    a) detailed version of upper main road as MultiLineString (red) [more detailed restuls, longer computation]
+    b) simple version of upper main road as LineString (green) [slighty less detailed results, faster compfutation]
+2) lower main road (blue)
+3) railroad (red dots)
+
+Choose your input options in the sql_query_builder
+
+![static inputs](https://github.com/CityScope/CSL_Hamburg_Noise/blob/master/documentation/static_input_options.png)
+
+###Design inputs
+those are the inputs we are expectiong from the architect user. 
+Road network (not mandatory) and buildings
+
+![static and design inputs](https://github.com/CityScope/CSL_Hamburg_Noise/blob/master/documentation/static_and_design_input.png)
+
+###Results
+*Results example with mock-traffic input*
+Result interpretation:
+ 
+EU treshold for "relevant" noise is 55db
+
+ < 45 dB(A) ’ WHERE IDISO=0
+
+ 45 <> 50 dB(A) ’ WHERE IDISO=1
+ 
+ 50 <> 55 dB(A) ’ WHERE IDISO=2
+ 
+ 55 <> 60 dB(A) ’ WHERE IDISO=3
+ 
+ 60 <> 65 dB(A) ’ WHERE IDISO=4
+ 
+ 65 <> 70 dB(A) ’ WHERE IDISO=5
+ 
+ 70 <> 75 dB(A) ’ WHERE IDISO=6
+ 
+ '>' 75 dB(A) ’ WHERE IDISO=7
+ 
+ ![results](https://github.com/CityScope/CSL_Hamburg_Noise/blob/master/documentation/results.png)
