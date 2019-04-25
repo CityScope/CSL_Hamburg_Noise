@@ -1,8 +1,10 @@
 #!/usr/bin/env python2.7
 
 # a class describing a squared cell in a city scope grid
-import geopy
-import geopy.distance
+import math
+import pyproj
+
+from shapely.geometry import Point, Polygon
 
 
 class GridCell:
@@ -32,7 +34,7 @@ class GridCell:
             return (self.height)
 
     def get_upper_right_corner(self):
-        return self.get_cell_corner(90)
+         return self.get_cell_corner(90)
 
     def get_lower_right_corner(self):
         return self.get_cell_corner(135)
@@ -42,17 +44,19 @@ class GridCell:
 
     # gets the cell corner as a point with coordinates.
     def get_cell_corner(self, angle):
-        start = self.get_origin()
+        if (angle % 90 == 0):
+            distance = self.get_cell_size()
+        elif (angle % 45 == 0):
+            distance = self.get_cell_size() * math.sqrt(2)
+        else:
+            raise Exception('The angle does not correspond to a corner in a square. Given angle: {}'.format(angle))
 
-        # Define a general distance object, initialized with a distance of cell_size.
-        d = geopy.distance.VincentyDistance(meters = self.get_cell_size()) # TODO can you enter meters?
+        bearing = angle + self.get_rotation()
 
-        # `destination` method uses a bearing of in degrees to get a distance in a certain direction (90 for east, ..)
-        # the resulting bearing is the angle of the desired cell corner plus the rotation of cell
-        bearing = self.get_rotation() + angle
-        point = d.destination(point=self.get_origin(), bearing=bearing)
+        corner_x = self.get_origin().x + distance * math.sin(math.radians(bearing))
+        corner_y = self.get_origin().y + distance * math.cos(math.radians(bearing))
 
-        return point
+        return Point(corner_x, corner_y)
 
 
 
