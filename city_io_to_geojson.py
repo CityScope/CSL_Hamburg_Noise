@@ -4,16 +4,19 @@ import urllib
 import GridCell
 import geopy
 import json
+import pyproj
+
+from shapely.geometry import Point, Polygon
+
 
 test_city_scope_address = 'https://cityio.media.mit.edu/api/table/mocho'
 result = json.load(urllib.urlopen(test_city_scope_address))
-
-start_cell_origin = geopy.Point(result['header']['spatial']['latitude'], result['header']['spatial']['longitude'])
+start_cell_origin = (Point(result['header']['spatial']['latitude'], result['header']['spatial']['longitude']))
 table_rotation = result['header']['spatial']['rotation'] # TODO can the table rotation be different form the cell rotation??
+
 table_cell_size = result['header']['spatial']['cellSize']
 table_row_count = result['header']['spatial']['nrows']
 table_column_count = result['header']['spatial']['ncols']
-
 
 def create_grid_of_cells():
     # create a list of GridCell objects for all cells in grid
@@ -43,20 +46,20 @@ def create_grid_of_cells():
 def get_cell_polygon(cell):
     return [
         [
-            cell.get_origin().latitude,
-            cell.get_origin().longitude
+            cell.get_origin().y,
+            cell.get_origin().x
         ],
         [
-            cell.get_upper_right_corner().latitude,
-            cell.get_upper_right_corner().longitude
+            cell.get_upper_right_corner().y,
+            cell.get_upper_right_corner().x
         ],
         [
-            cell.get_lower_right_corner().latitude,
-            cell.get_lower_right_corner().longitude
+            cell.get_lower_right_corner().y,
+            cell.get_lower_right_corner().x
         ],
         [
-            cell.get_lower_left_corner().latitude,
-            cell.get_lower_left_corner().longitude
+            cell.get_lower_left_corner().y,
+            cell.get_lower_left_corner().x
         ]
     ]
 
@@ -84,10 +87,8 @@ def create_geo_json(grid_of_cells):
         cell_id = {"id": 1}
 
         for point in get_cell_polygon(cell):
-            #print(cell_geometry)
             cell_geometry["geometry"]["coordinates"][0].append(point)
 
-        feature = [cell_geometry, cell_properties, cell_id]
         geo_json['features'].append(cell_geometry)
         geo_json['features'].append(cell_properties)
         geo_json['features'].append(cell_id)
@@ -95,13 +96,19 @@ def create_geo_json(grid_of_cells):
 
     print (json.dumps(geo_json))
 
-    return json.dumps(geo_json)
+    return geo_json
 
+def reproject_origin(start_cell_origin):
+    wgs84 = pyproj.Proj("+init=EPSG:4326")
+    espg = pyproj.Proj("+init=EPSG:25832")
+    origin_x, origin_y = pyproj.transform(wgs84, espg, start_cell_origin.y, start_cell_origin.x)
 
+    return Point(origin_y, origin_x)
+
+start_cell_origin = reproject_origin(start_cell_origin)
 grid_of_cells = create_grid_of_cells()
 print(len(grid_of_cells))
 geo_json = create_geo_json(grid_of_cells)
 
-exit()
-with open('input_geojson/' + json_dir + '/' + output_file_name + '.json', 'wb') as f:
-    json.dump(fc, f)
+with open('grid_geojson/' + '/' + 'table' + '.json', 'wb') as f:
+    json.dump(geo_json, f)
