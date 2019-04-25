@@ -2,7 +2,6 @@
 
 # a class describing a squared cell in a city scope grid
 import math
-import pyproj
 
 from shapely.geometry import Point, Polygon
 
@@ -19,19 +18,19 @@ class GridCell:
 
         # defining class methods
     def get_origin(self):
-        return (self.origin)
+        return self.origin
 
     def get_rotation(self):
-        return (self.rotation)
+        return self.rotation
 
     def get_cell_size(self):
-            return (self.cell_size)
+            return self.cell_size
 
     def get_cell_type(self):
-            return (self.cell_type)
+            return self.cell_type
 
     def get_height(self):
-            return (self.height)
+            return self.height
 
     def get_upper_right_corner(self):
          return self.get_cell_corner(90)
@@ -51,6 +50,7 @@ class GridCell:
         else:
             raise Exception('The angle does not correspond to a corner in a square. Given angle: {}'.format(angle))
 
+        # direction by table rotation and angle of the corner
         bearing = angle + self.get_rotation()
 
         corner_x = self.get_origin().x + distance * math.sin(math.radians(bearing))
