@@ -27,7 +27,7 @@ class CityScopeTable:
     def get_start_cell_origin_epsg(self):
         return self.reproject_origin()
 
-    def get_start_cell_origin(self):
+    def get_start_cell_origin_wgs(self):
         return self.start_cell_origin
 
     def get_table_rotation(self):

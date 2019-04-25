@@ -18,7 +18,7 @@ def create_grid_of_cells(table):
 
             # get coordinates of the current cell's origin
             if (row == 0 and column == 0):
-                cell_origin = table.get_start_cell_origin()
+                cell_origin = table.get_start_cell_origin_epsg()
             # in highest row of grid - move towards the right
             elif (row == 0 and column != 0):
                 cell_origin = grid_of_cells[(column - 1)].get_upper_right_corner()
@@ -60,35 +60,39 @@ def get_cell_polygon_coord(cell):
     ]
 
 
-def create_geo_json(grid_of_cells):
+def create_buildings_json(grid_of_cells):
     geo_json = {
     "type": "FeatureCollection",
       "features": [
         ]
     }
 
+    buildings_id = 0
     for cell in grid_of_cells:
-        cell_geometry = {
-            "geometry": {
-            "type": "Polygon",
-            "coordinates": [[]]
+        # filter out empty cells
+        if cell.get_cell_type() != -1:
+            cell_geometry = {
+                "geometry": {
+                "type": "Polygon",
+                "coordinates": [[]]
+                }
             }
-        }
-        cell_properties = {
-            "properties": {
-                "height": cell.get_height(),
-                "type": cell.get_cell_type(),
-                # TODO : consider ignoring empty cells, distinguish between streets and buildings, ..
-              }
-        }
-        cell_id = {"id": 1}
+            cell_properties = {
+                "properties": {
+                    "height": cell.get_height(),
+                    "type": cell.get_cell_type(),
+                    # TODO : consider ignoring empty cells, distinguish between streets and buildings, ..
+                  }
+            }
+            cell_id = {"id": buildings_id}
+            buildings_id += 1
 
-        for point in get_cell_polygon_coord(cell):
-            cell_geometry["geometry"]["coordinates"][0].append(point)
+            for point in get_cell_polygon_coord(cell):
+                cell_geometry["geometry"]["coordinates"][0].append(point)
 
-        geo_json['features'].append(cell_geometry)
-        geo_json['features'].append(cell_properties)
-        geo_json['features'].append(cell_id)
+            geo_json['features'].append(cell_geometry)
+            geo_json['features'].append(cell_properties)
+            geo_json['features'].append(cell_id)
 
     return geo_json
 
@@ -96,8 +100,8 @@ def create_geo_json(grid_of_cells):
 test_city_scope_address = 'https://cityio.media.mit.edu/api/table/mocho'
 table = CityScopeTable.CityScopeTable(test_city_scope_address)
 grid_of_cells = create_grid_of_cells(table)
-geo_json = create_geo_json(grid_of_cells)
+geo_json = create_buildings_json(grid_of_cells)
 
 # save geojson
-with open('grid_geojson/' + '/' + 'table' + '.json', 'wb') as f:
+with open('input_geojson/design/buildings' + '/' + 'buildings' + '.json', 'wb') as f:
     json.dump(geo_json, f)
