@@ -47,4 +47,4 @@ class CityScopeTable:
         espg = pyproj.Proj("+init=EPSG:25832")
         origin_x, origin_y = pyproj.transform(wgs84, espg, self.start_cell_origin.x, self.start_cell_origin.y)
 
-        return Point(origin_y, origin_x)
+        return Point(origin_x, origin_y)
