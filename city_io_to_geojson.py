@@ -42,21 +42,26 @@ def create_grid_of_cells(table):
 def get_cell_polygon_coord(cell):
     return [
         [
-            cell.get_origin().y,
-            cell.get_origin().x
+            cell.get_origin().x,
+            cell.get_origin().y
         ],
         [
-            cell.get_upper_right_corner().y,
-            cell.get_upper_right_corner().x
+            cell.get_upper_right_corner().x,
+            cell.get_upper_right_corner().y
         ],
         [
-            cell.get_lower_right_corner().y,
-            cell.get_lower_right_corner().x
+            cell.get_lower_right_corner().x,
+            cell.get_lower_right_corner().y
         ],
         [
-            cell.get_lower_left_corner().y,
-            cell.get_lower_left_corner().x
-        ]
+            cell.get_lower_left_corner().x,
+            cell.get_lower_left_corner().y
+        ],
+        # coordinates of a polygon need to form a closed linestring
+        [
+            cell.get_origin().x,
+            cell.get_origin().y
+        ],
     ]
 
 
@@ -71,28 +76,31 @@ def create_buildings_json(grid_of_cells):
     for cell in grid_of_cells:
         # filter out empty cells
         if cell.get_cell_type() != -1:
-            cell_geometry = {
+            coordinates = []
+            for point in get_cell_polygon_coord(cell):
+                coordinates.append(point)
+                #coordinates["geometry"]["coordinates"][0].append(point)
+
+            cell_content = {
                 "geometry": {
                 "type": "Polygon",
-                "coordinates": [[]]
-                }
-            }
-            cell_properties = {
+                "coordinates": [coordinates]
+                },
                 "properties": {
-                    "height": cell.get_height(),
-                    "type": cell.get_cell_type(),
-                    # TODO : consider ignoring empty cells, distinguish between streets and buildings, ..
-                  }
-            }
-            cell_id = {"id": buildings_id}
+                        "height": cell.get_height(),
+                        "type": cell.get_cell_type(),
+                        # TODO : consider ignoring empty cells, distinguish between streets and buildings, ..
+                },
+                "id": buildings_id
+                }
+
             buildings_id += 1
 
-            for point in get_cell_polygon_coord(cell):
-                cell_geometry["geometry"]["coordinates"][0].append(point)
 
-            geo_json['features'].append(cell_geometry)
-            geo_json['features'].append(cell_properties)
-            geo_json['features'].append(cell_id)
+
+            geo_json['features'].append(cell_content)
+            #geo_json['features'].append(cell_properties)
+            #geo_json['features'].append(cell_id)
 
     return geo_json
 

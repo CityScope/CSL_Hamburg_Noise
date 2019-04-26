@@ -7,6 +7,7 @@ import datetime
 try:
     import psycopg2
 except ImportError:
+    print("Did you start the database? Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 

@@ -95,6 +95,13 @@ def get_building_queries():
 
     for feature in data['features']:
         buildingCoordinates = ''
+        try:
+            print(feature)
+            print(feature['geometry']['coordinates'])
+        except:
+            print("invalid json")
+            print(feature)
+            exit()
         for coordinates in feature['geometry']['coordinates']:
             for coordinate in coordinates:
                 print('building', coordinate)
