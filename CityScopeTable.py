@@ -11,8 +11,9 @@ import pyproj
 class CityScopeTable:
     # defining constructor
     # origin is the upper left corner
-    def __init__(self, address):
+    def __init__(self, address, table_flipped):
         self.address = address
+        self.table_flipped = table_flipped
 
         self.result = json.load(urllib.urlopen(self.address))
         self.start_cell_origin = (Point(self.result['header']['spatial']['latitude'], self.result['header']['spatial']['longitude']))
@@ -21,17 +22,34 @@ class CityScopeTable:
         self.table_row_count = self.result['header']['spatial']['nrows']
         self.table_column_count = self.result['header']['spatial']['ncols']
 
+    def create_origin(self, table_flipped):
+        if not table_flipped:
+            self.start_cell_origin = (Point(self.result['header']['spatial']['latitude'], self.result['header']['spatial']['longitude']))
+            return self.start_cell_origin
+
+
+
     def get_result(self):
         return self.result
 
     def get_start_cell_origin_epsg(self):
-        return self.reproject_origin()
+        origin = self.get_reprojected_origin()
+        if not self.table_flipped:
+            return origin
+        # else: translate the table origin from the Northwest to the south east corner
+        # TODO rotation berücksichtigen!"!
+        flipped_x = origin.x - (self.get_table_column_count() * self.table_cell_size)
+        flipped_y = origin.y - (self.get_table_row_count() * self.table_cell_size)
 
-    def get_start_cell_origin_wgs(self):
-        return self.start_cell_origin
+        print(flipped_x, flipped_y)
+
+        return Point(flipped_x, flipped_y)
 
     def get_table_rotation(self):
-        return self.table_rotation
+        if self.table_flipped:
+            return 360 - self.table_rotation
+
+        return 360- self.table_rotation
 
     def get_table_cell_size(self):
         return self.table_cell_size
@@ -42,7 +60,7 @@ class CityScopeTable:
     def get_table_column_count(self):
         return self.table_column_count
 
-    def reproject_origin(self):
+    def get_reprojected_origin(self):
         wgs84 = pyproj.Proj("+init=EPSG:4326")
         espg = pyproj.Proj("+init=EPSG:25832")
         origin_x, origin_y = pyproj.transform(wgs84, espg, self.start_cell_origin.x, self.start_cell_origin.y)

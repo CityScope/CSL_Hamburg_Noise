@@ -74,8 +74,9 @@ def create_buildings_json(grid_of_cells):
 
     buildings_id = 0
     for cell in grid_of_cells:
-        # filter out empty cells
-        if cell.get_cell_type() != -1:
+        # filter out empty or irrelevant cells
+        # TODO: use city_io mapping for this, no hard coded ids
+        if cell.get_cell_type() not in [-1]:#, 3, 5]:
             coordinates = []
             for point in get_cell_polygon_coord(cell):
                 coordinates.append(point)
@@ -99,14 +100,13 @@ def create_buildings_json(grid_of_cells):
 
 
             geo_json['features'].append(cell_content)
-            #geo_json['features'].append(cell_properties)
-            #geo_json['features'].append(cell_id)
 
     return geo_json
 
-
-test_city_scope_address = 'https://cityio.media.mit.edu/api/table/mocho'
-table = CityScopeTable.CityScopeTable(test_city_scope_address)
+# the table origin is flipped to teh southeast, instead of regular northwest
+table_flipped = False
+test_city_scope_address = 'https://cityio.media.mit.edu/api/table/grasbrook'
+table = CityScopeTable.CityScopeTable(test_city_scope_address, table_flipped)
 grid_of_cells = create_grid_of_cells(table)
 geo_json = create_buildings_json(grid_of_cells)
 
