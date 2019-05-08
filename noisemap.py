@@ -114,12 +114,15 @@ def executeScenario1(cursor):
     create table contouring_noise_map as select the_geom,idiso from ST_Explode('multipolygon_iso');
     drop table multipolygon_iso;""")
 
+    
+    cwd = os.path.dirname(os.path.abspath(__file__))
     # Now save in a shape file
     timeStamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    shapePath = os.path.abspath("./results/" + str(timeStamp) + "_result.shp")
+    shapePath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.shp")
     cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
 
     print("Execution done! Open this file in a GIS:\n" + shapePath)
+    return shapePath
 
 
 def main():
@@ -137,6 +140,8 @@ def main():
     # conn.cursor will return a cursor object, you can use this cursor to perform queries
     cursor = conn.cursor()
     print("Connected!\n")
+
+        
 
     # Init spatial features
     cursor.execute("CREATE ALIAS IF NOT EXISTS H2GIS_SPATIAL FOR \"org.h2gis.functions.factory.H2GISFunctions.load\";")
@@ -157,7 +162,9 @@ def main():
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid3D FOR \"org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation\";")
 
-    executeScenario1(cursor)
 
 
-main()
+    return executeScenario1(cursor)
+
+if __name__ == "__main__":
+    main()
