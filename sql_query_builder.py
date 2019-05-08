@@ -6,21 +6,20 @@ import numpy
 from geomet import wkt
 import RoadInfo
 
+cwd = os.path.dirname(os.path.abspath(__file__))
+
 # TODO: all coordinates for roads and buildings are currently set to z level 0
 
-print("################################")        
-path = os.path.dirname(os.path.abspath(__file__))
-print(path)
 # TODO move into a config file or simal
 # dynamic input data from designer
-road_network_json = os.path.abspath(path+'/input_geojson/design/roads/road_network.json')
-buildings_json = os.path.abspath(path+'/input_geojson/design/buildings/buildings.json')
+road_network_json = os.path.abspath(cwd+'/input_geojson/design/roads/road_network.json')
+buildings_json = os.path.abspath(cwd+'/input_geojson/design/buildings/buildings.json')
 
 # static input data
-upper_main_road_single_line_json = os.path.abspath(path+'/input_geojson/static/roads/upper_main_road_single.json')
-upper_main_road_multi_line_json = os.path.abspath(path+'/input_geojson/static/roads/upper_main_road_multi.json')
-main_road_lower_multi_line_json = os.path.abspath(path+'/input_geojson/static/roads/lower_main_road_multi.json')
-railroad_multi_line_json = os.path.abspath(path+'/input_geojson/static/roads/railroad.json')
+upper_main_road_single_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/upper_main_road_single.json')
+upper_main_road_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/upper_main_road_multi.json')
+main_road_lower_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/lower_main_road_multi.json')
+railroad_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/railroad.json')
 
 # choose your output options
 include_rail_road = False
@@ -92,7 +91,7 @@ def get_traffic_queries():
 
 # get sql queries for the buildings
 def get_building_queries():
-    data = open_geojson(os.path.abspath(path+'/input_geojson/design/buildings/buildings.json'))
+    data = open_geojson(os.path.abspath(cwd+'/input_geojson/design/buildings/buildings.json'))
 
     sqlInsertStringsAllBuildings = []
 

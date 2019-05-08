@@ -114,13 +114,11 @@ def executeScenario1(cursor):
     create table contouring_noise_map as select the_geom,idiso from ST_Explode('multipolygon_iso');
     drop table multipolygon_iso;""")
 
-
-    print("################################")        
-    path = os.path.dirname(os.path.abspath(__file__))
-    print(path)
+    
+    cwd = os.path.dirname(os.path.abspath(__file__))
     # Now save in a shape file
     timeStamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    shapePath = os.path.abspath(path+"/results/" + str(timeStamp) + "_result.shp")
+    shapePath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.shp")
     cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
 
     print("Execution done! Open this file in a GIS:\n" + shapePath)
