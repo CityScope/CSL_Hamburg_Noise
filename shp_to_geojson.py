@@ -1,9 +1,8 @@
 #!/usr/bin/env python2.7
 
-import ogr
+import convert as conv
 import json
 
-driver = ogr.GetDriverByName('ESRI Shapefile')
 shp_path_buildings = '/home/andre/noise_new/modelling/input_shape/buildings.shp'
 shp_path_road_network = '/home/andre/noise_new/modelling/input_shape/road_network.shp'
 shp_path_upper_main_road_single = '/home/andre/noise_new/modelling/input_shape/upper_part_main_road_single.shp'
@@ -13,22 +12,7 @@ shp_path_railroad = '/home/andre/noise_new/modelling/input_shape/railroad.shp'
 
 
 def convert(input_file_path, json_dir, output_file_name):
-    data_source = driver.Open(input_file_path, 0)
-
-    fc = {
-        'type': 'FeatureCollection',
-        'features': []
-    }
-
-    lyr = data_source.GetLayer(0)
-    for feature in lyr:
-        fc['features'].append(feature.ExportToJson(as_object=True))
-
-    with open('input_geojson/' + json_dir + '/' + output_file_name + '.json', 'wb') as f:
-        json.dump(fc, f)
-
-    # todo rewind to right hand rule if necesscary
-    # ogr2ogr -fgr2ogr -f GeoJSON -lco RFC7946=YES output.json input.json
+    conv.convert(input_file_path, 'input_geojson/' + json_dir + '/' + output_file_name + '.json')
 
 
 convert(shp_path_buildings, 'design/buildings', 'buildings')
