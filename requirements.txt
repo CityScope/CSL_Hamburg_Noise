@@ -1,0 +1,4 @@
+pyshp
+geomet
+psycopg2
+numpy
