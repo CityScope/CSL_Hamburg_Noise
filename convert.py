@@ -1,5 +1,6 @@
-import shapefile
+#!/usr/bin/env python2.7
 
+import shapefile
 import json
 import argparse
 
