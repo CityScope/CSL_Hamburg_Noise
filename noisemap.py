@@ -120,8 +120,9 @@ def executeScenario1(cursor):
     # Now save in a shape file
     timeStamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
     shapePath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.shp")
+    geojsonPath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.geojson")
     cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
-
+    cursor.execute("CALL GeoJsonWrite('" + geojsonPath + "', 'CONTOURING_NOISE_MAP');")
     print("Execution done! Open this file in a GIS:\n" + shapePath)
     return shapePath
 
