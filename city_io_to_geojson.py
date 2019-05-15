@@ -3,6 +3,7 @@
 import CityScopeTable
 import GridCell
 import json
+import os
 from shapely.geometry import Point, Polygon
 
 
@@ -88,6 +89,7 @@ def create_buildings_json(grid_of_cells):
                 "coordinates": [coordinates]
                 },
                 "properties": {
+                        "id": buildings_id,
                         "height": cell.get_height(),
                         "type": cell.get_cell_type(),
                         # TODO : consider ignoring empty cells, distinguish between streets and buildings, ..
@@ -104,8 +106,10 @@ def create_buildings_json(grid_of_cells):
     return geo_json
 
 # the table origin is flipped to teh southeast, instead of regular northwest
-table_flipped = False
-test_city_scope_address = 'https://cityio.media.mit.edu/api/table/grasbrook'
+table_flipped = True
+#test_city_scope_address = 'https://cityio.media.mit.edu/api/table/grasbrook'
+test_city_scope_address = os.path.dirname(os.path.abspath(__file__)) + '/virtual_table.json'
+# dynamic input data from designer
 table = CityScopeTable.CityScopeTable(test_city_scope_address, table_flipped)
 grid_of_cells = create_grid_of_cells(table)
 geo_json = create_buildings_json(grid_of_cells)
