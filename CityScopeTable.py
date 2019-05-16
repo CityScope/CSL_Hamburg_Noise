@@ -5,8 +5,8 @@
 from shapely.geometry import Point
 import json
 import urllib
-import pyproj
 import math
+from reproject import reproject_point_to_hamburg_epsg
 
 
 class CityScopeTable:
@@ -17,7 +17,9 @@ class CityScopeTable:
         self.table_flipped = table_flipped
 
         self.result = json.load(urllib.urlopen(self.address))
-        self.start_cell_origin = (Point(self.result['header']['spatial']['longitude'], self.result['header']['spatial']['latitude']))
+        # Temporary fix, as longitude and latitude are falsely swapped at the endpoint
+        #self.start_cell_origin = (Point(self.result['header']['spatial']['longitude'], self.result['header']['spatial']['latitude']))
+        self.start_cell_origin = (Point(self.result['header']['spatial']['latitude'], self.result['header']['spatial']['longitude']))
         self.table_rotation = self.result['header']['spatial']['rotation']  # TODO can the table rotation be different form the cell rotation??
         self.table_cell_size = self.result['header']['spatial']['cellSize']
         self.table_row_count = self.result['header']['spatial']['nrows']
@@ -47,9 +49,7 @@ class CityScopeTable:
         return self.table_column_count
 
     def get_reprojected_origin(self):
-        wgs84 = pyproj.Proj("+init=EPSG:4326")
-        espg = pyproj.Proj("+init=EPSG:25832")
-        origin_x, origin_y = pyproj.transform(wgs84, espg, self.start_cell_origin.x, self.start_cell_origin.y)
+        origin_x, origin_y = reproject_point_to_hamburg_epsg([self.start_cell_origin.x, self.start_cell_origin.y])
 
         return Point(origin_x, origin_y)
 

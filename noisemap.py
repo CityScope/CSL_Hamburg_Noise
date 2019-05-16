@@ -4,6 +4,7 @@ import os
 import datetime
 import json
 import requests
+import configparser
 
 from city_io_to_geojson import get_data_from_city_io
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
@@ -28,8 +29,8 @@ def executeScenario1(cursor):
     drop table if exists buildings;
     create table buildings ( the_geom GEOMETRY );
     """)
-    buildingsQueries = get_building_queries()
-    for building in buildingsQueries:
+    buildings_queries = get_building_queries()
+    for building in buildings_queries:
         print(building)
         # Inserting building into database
         cursor.execute("""
@@ -43,8 +44,8 @@ def executeScenario1(cursor):
         drop table if exists roads_geom;
         create table roads_geom ( the_geom GEOMETRY, NUM INTEGER, node_from INTEGER, node_to INTEGER, road_type INTEGER);
         """)
-    roadsQueries = get_road_queries()
-    for road in roadsQueries:
+    roads_queries = get_road_queries()
+    for road in roads_queries:
         print(road)
         cursor.execute("""{0}""".format(road))
 
@@ -53,9 +54,9 @@ def executeScenario1(cursor):
     drop table if exists roads_traffic;
     create table roads_traffic ( node_from INTEGER, node_to INTEGER, load_speed DOUBLE, junction_speed DOUBLE, max_speed DOUBLE, lightVehicleCount DOUBLE, heavyVehicleCount DOUBLE);
     """)
-    trafficQueries = get_traffic_queries()
-    for trafficQuery in trafficQueries:
-        cursor.execute("""{0}""".format(trafficQuery))
+    traffic_queries = get_traffic_queries()
+    for traffic_query in traffic_queries:
+        cursor.execute("""{0}""".format(traffic_query))
 
     print("Duplicate geometries to give sound level for each traffic direction..")
 
@@ -123,19 +124,19 @@ def executeScenario1(cursor):
     
     cwd = os.path.dirname(os.path.abspath(__file__))
     # Now save in a shape file
-    timeStamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
+    time_stamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
     # Save result as shapefile
-    # shapePath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.shp")
+    # shapePath = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.shp")
     # cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
 
     # export result from database to geojson
-    geojsonPath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.geojson")
-    cursor.execute("CALL GeoJsonWrite('" + geojsonPath + "', 'CONTOURING_NOISE_MAP');")
+    geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
+    cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
     # reproject result to WGS84 coordinate reference system
-    reproject_result(geojsonPath)
-    print("Execution done! Open this file in a GIS:\n" + geojsonPath)
+    reproject_result(geojson_path)
+    print("Execution done! Open this file in a GIS:\n" + geojson_path)
 
-    with open(geojsonPath) as f:
+    with open(geojson_path) as f:
         return json.load(f)
 
 
@@ -181,12 +182,23 @@ def get_noise_propagation_result():
 
 
 if __name__ == "__main__":
-    get_data_from_city_io()
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    usage_mode = config['SETTINGS']['USAGE_MODE']
+
+    # get the data from cityIO, convert it to geojson and write it to ./input_geojson/design/buildings/buildings.json
+    if usage_mode == 'city_scope':
+        get_data_from_city_io()
+
+    # get result json
     result = get_noise_propagation_result()
 
     # post result to cityIO
-    r = requests.post('https://cityio.media.mit.edu/api/table/grasbrook_noise/', json=result)
+    if usage_mode == 'city_scope':
+        post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
+        r = requests.post(post_address, json=result)
 
-    if not r.status_code == 200:
-        print("could not post result to cityIO")
-        print("Error code", r.status_code)
+        if not r.status_code == 200:
+            print("could not post result to cityIO")
+            print("Error code", r.status_code)
+

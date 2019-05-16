@@ -5,26 +5,29 @@ import os
 import numpy
 from geomet import wkt
 import RoadInfo
+import configparser
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 
 # TODO: all coordinates for roads and buildings are currently set to z level 0
 
-# TODO move into a config file or simal
+# settings for the static input data
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+include_rail_road = config['SETTINGS'].getboolean('INCLUDE_RAILROAD')
+include_lower_main_road = config['SETTINGS'].getboolean('INCLUDE_LOWER_MAIN_ROAD')
+upper_main_road_as_multi_line = config['SETTINGS'].getboolean('UPPER_MAIN_ROAD_AS_MULTI_LINE')
+
 # dynamic input data from designer
-road_network_json = os.path.abspath(cwd+'/input_geojson/design/roads/road_network.json')
-buildings_json = os.path.abspath(cwd+'/input_geojson/design/buildings/buildings.json')
+road_network_json = config['SETTINGS']['INPUT_JSON_ROAD_NETWORK']
+buildings_json = config['SETTINGS']['INPUT_JSON_BUILDINGS']
 
 # static input data
 upper_main_road_single_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/upper_main_road_single.json')
 upper_main_road_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/upper_main_road_multi.json')
 main_road_lower_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/lower_main_road_multi.json')
 railroad_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/railroad.json')
-
-# choose your output options
-include_rail_road = False
-include_lower_main_road = False
-upper_main_road_as_multi_line = False
 
 # road names from julias shapefile : road_type_ids from IffStar NoiseModdeling
 noise_road_types = {
