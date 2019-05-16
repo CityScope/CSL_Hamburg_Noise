@@ -24,6 +24,8 @@ class CityScopeTable:
         self.table_cell_size = self.result['header']['spatial']['cellSize']
         self.table_row_count = self.result['header']['spatial']['nrows']
         self.table_column_count = self.result['header']['spatial']['ncols']
+        self.table_mapping = self.result['header']['mapping']['type']
+        # todo enter mapping to get street id
 
     def get_result(self):
         return self.result
@@ -47,6 +49,12 @@ class CityScopeTable:
 
     def get_table_column_count(self):
         return self.table_column_count
+
+    def get_table_mapping(self):
+        mapping = self.table_mapping
+        mapping.append('unknown')
+
+        return self.table_mapping
 
     def get_reprojected_origin(self):
         origin_x, origin_y = reproject_point_to_hamburg_epsg([self.start_cell_origin.x, self.start_cell_origin.y])
