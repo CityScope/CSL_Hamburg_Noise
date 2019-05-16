@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
+from reproject import save_reprojected_copy_of_geojson_epsg_to_wgs as reproject_result
 import datetime
 
 try:
@@ -119,12 +120,14 @@ def executeScenario1(cursor):
     cwd = os.path.dirname(os.path.abspath(__file__))
     # Now save in a shape file
     timeStamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    shapePath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.shp")
+    # Save result as shapefile
+    # shapePath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.shp")
+    # cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
+
     geojsonPath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.geojson")
-    cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
     cursor.execute("CALL GeoJsonWrite('" + geojsonPath + "', 'CONTOURING_NOISE_MAP');")
-    print("Execution done! Open this file in a GIS:\n" + shapePath)
-    return shapePath
+    reproject_result(geojsonPath)
+    print("Execution done! Open this file in a GIS:\n" + geojsonPath)
 
 
 def main():
@@ -164,9 +167,9 @@ def main():
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid3D FOR \"org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation\";")
 
+    # perform calculation
+    executeScenario1(cursor)
 
-
-    return executeScenario1(cursor)
 
 if __name__ == "__main__":
     main()
