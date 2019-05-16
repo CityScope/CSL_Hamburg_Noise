@@ -24,19 +24,22 @@ Geojsons can be derived from the shapefiles in the `input_shape` directory using
 
 Run  `java -cp "bin/*:bundle/*:sys-bundle/*" org.h2.tools.Server -pg` inside the project folder
 
+## Config.ini
+Chose the option of input detail
+include_rail_road = False
+include_lower_main_road = False
+upper_main_road_as_multi_line = False # MultiLineStrings seems to deliver more accurate results but need more computation time
+
+Chose your usage_mode 
+city_scope : Reads the grid of a cityIO endpoint and calculates results for the grid, posts results
+tuio: Reads the input file in for the buildings.json 
+
 ## Computation
 Start the computation by executing `noisemap.py`
 The noise propgation will be computed based on the input files in the the `input_geojson directory`
 The computation results will be saved in the `results` directory. Currently the output format is as shapefile.
 Use QGis to view results (output style: choose categorize, magma (inverted) for best view)
 Or drag and drop into https://mapshaper.org/
-
-Chose computation options in sql_query_builder.py file
-
-Chose the option of input detail
-include_rail_road = False
-include_lower_main_road = False
-upper_main_road_as_multi_line = False # MultiLineStrings seems to deliver more accurate results but need more computation time
 
 # Increase computation speed?
 we should investigate whether we can provide a static information on sound sources from traffic data 
