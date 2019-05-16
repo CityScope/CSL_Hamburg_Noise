@@ -1,7 +1,6 @@
 #!/usr/bin/env python2.7
 
 import convert as conv
-import json
 
 shp_path_buildings = '/home/andre/noise_new/modelling/input_shape/buildings.shp'
 shp_path_road_network = '/home/andre/noise_new/modelling/input_shape/road_network.shp'

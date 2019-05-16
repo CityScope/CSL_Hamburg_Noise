@@ -105,15 +105,18 @@ def create_buildings_json(grid_of_cells):
 
     return geo_json
 
-# the table origin is flipped to teh southeast, instead of regular northwest
-table_flipped = True
-#test_city_scope_address = 'https://cityio.media.mit.edu/api/table/grasbrook'
-test_city_scope_address = os.path.dirname(os.path.abspath(__file__)) + '/virtual_table.json'
-# dynamic input data from designer
-table = CityScopeTable.CityScopeTable(test_city_scope_address, table_flipped)
-grid_of_cells = create_grid_of_cells(table)
-geo_json = create_buildings_json(grid_of_cells)
+# collects the data from city io, transforms into a geojson and saves that geojson as input for the noise calculation
+def get_data_from_city_io():
 
-# save geojson
-with open('input_geojson/design/buildings' + '/' + 'buildings' + '.json', 'wb') as f:
-    json.dump(geo_json, f)
+    # the table origin is flipped to teh southeast, instead of regular northwest
+    table_flipped = True
+    test_city_scope_address = 'https://cityio.media.mit.edu/api/table/grasbrook'
+    #test_city_scope_address = os.path.dirname(os.path.abspath(__file__)) + '/virtual_table.json'
+    # dynamic input data from designer
+    table = CityScopeTable.CityScopeTable(test_city_scope_address, table_flipped)
+    grid_of_cells = create_grid_of_cells(table)
+    geo_json = create_buildings_json(grid_of_cells)
+
+    # save geojson
+    with open('input_geojson/design/buildings' + '/' + 'buildings' + '.json', 'wb') as f:
+        json.dump(geo_json, f)

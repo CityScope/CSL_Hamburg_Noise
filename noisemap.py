@@ -1,9 +1,13 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 import os
+import datetime
+import json
+import requests
+
+from city_io_to_geojson import get_data_from_city_io
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 from reproject import save_reprojected_copy_of_geojson_epsg_to_wgs as reproject_result
-import datetime
 
 try:
     import psycopg2
@@ -124,13 +128,18 @@ def executeScenario1(cursor):
     # shapePath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.shp")
     # cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
 
+    # export result from database to geojson
     geojsonPath = os.path.abspath(cwd+"/results/" + str(timeStamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojsonPath + "', 'CONTOURING_NOISE_MAP');")
+    # reproject result to WGS84 coordinate reference system
     reproject_result(geojsonPath)
     print("Execution done! Open this file in a GIS:\n" + geojsonPath)
 
+    with open(geojsonPath) as f:
+        return json.load(f)
 
-def main():
+
+def get_noise_propagation_result():
     # Define our connection string
     # db name has to be an absolute path
     db_name = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
@@ -168,8 +177,16 @@ def main():
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid3D FOR \"org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation\";")
 
     # perform calculation
-    executeScenario1(cursor)
+    return executeScenario1(cursor)
 
 
 if __name__ == "__main__":
-    main()
+    get_data_from_city_io()
+    result = get_noise_propagation_result()
+
+    # post result to cityIO
+    r = requests.post('https://cityio.media.mit.edu/api/table/grasbrook_noise/', json=result)
+
+    if not r.status_code == 200:
+        print("could not post result to cityIO")
+        print("Error code", r.status_code)
