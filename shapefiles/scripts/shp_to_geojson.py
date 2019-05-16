@@ -2,12 +2,12 @@
 
 import convert as conv
 
-shp_path_buildings = '/home/andre/noise_new/modelling/input_shape/buildings.shp'
-shp_path_road_network = '/home/andre/noise_new/modelling/input_shape/road_network.shp'
-shp_path_upper_main_road_single = '/home/andre/noise_new/modelling/input_shape/upper_part_main_road_single.shp'
-shp_path_upper_main_road_multi = '/home/andre/noise_new/modelling/input_shape/upper_part_main_road.shp'
-shp_path_lower_main_road_multi = '/home/andre/noise_new/modelling/input_shape/lower_part_main_road.shp'
-shp_path_railroad = '/home/andre/noise_new/modelling/input_shape/railroad.shp'
+shp_path_buildings = '/home/andre/noise_new/modelling/shapefiles/buildings.shp'
+shp_path_road_network = '/home/andre/noise_new/modelling/shapefiles/road_network.shp'
+shp_path_upper_main_road_single = '/home/andre/noise_new/modelling/shapefiles/upper_part_main_road_single.shp'
+shp_path_upper_main_road_multi = '/home/andre/noise_new/modelling/shapefiles/upper_part_main_road.shp'
+shp_path_lower_main_road_multi = '/home/andre/noise_new/modelling/shapefiles/lower_part_main_road.shp'
+shp_path_railroad = '/home/andre/noise_new/modelling/shapefiles/railroad.shp'
 
 
 def convert(input_file_path, json_dir, output_file_name):
