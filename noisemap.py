@@ -6,9 +6,9 @@ import json
 import requests
 import configparser
 
-from city_io_to_geojson import get_data_from_city_io
+from parse_city_scope_table import get_buildings_from_city_scope
+from city_io_to_geojson import city_io_to_geojson, reproject
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
-from reproject import save_reprojected_copy_of_geojson_epsg_to_wgs as reproject_result
 
 try:
     import psycopg2
@@ -133,7 +133,7 @@ def executeScenario1(cursor):
     geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
     # reproject result to WGS84 coordinate reference system
-    reproject_result(geojson_path)
+    reproject.reproject_geojson_local_to_global(geojson_path)
     print("Execution done! Open this file in a GIS:\n" + geojson_path)
 
     with open(geojson_path) as f:
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
     # get the data from cityIO, convert it to geojson and write it to ./input_geojson/design/buildings/buildings.json
     if usage_mode == 'city_scope':
-        get_data_from_city_io()
+        get_buildings_from_city_scope()
 
     # get result json
     result = get_noise_propagation_result()
