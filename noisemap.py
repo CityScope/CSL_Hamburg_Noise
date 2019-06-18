@@ -5,6 +5,7 @@ import datetime
 import json
 import requests
 import configparser
+import visvalingamwyatt as vw
 
 from parse_city_scope_table import get_buildings_from_city_scope
 from city_io_to_geojson import city_io_to_geojson, reproject
@@ -132,6 +133,8 @@ def executeScenario1(cursor):
     # export result from database to geojson
     geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
+    # simplify result
+    simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
     # reproject result to WGS84 coordinate reference system
     reproject.reproject_geojson_local_to_global(geojson_path)
     print("Execution done! Open this file in a GIS:\n" + geojson_path)
