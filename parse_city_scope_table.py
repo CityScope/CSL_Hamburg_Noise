@@ -15,7 +15,9 @@ def create_buildings_json(table, grid_of_cells):
     buildings_id = 0
     for cell in grid_of_cells:
         # filter out empty or irrelevant cells
-        if not table.get_table_mapping()[str(cell.get_cell_type())] in ['ROAD', 'unknown', '']:
+        #if not table.get_table_mapping()[str(cell.get_cell_type())] in ['ROAD', 'unknown', '']:
+        print(cell.get_cell_type())
+        if not table.get_table_mapping()[cell.get_cell_type()] in ['street', 'unknown', '']:
             coordinates = []
             for point in city_io_to_geojson.get_cell_polygon_coord(cell):
                 coordinates.append(point)
