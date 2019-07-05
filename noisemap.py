@@ -5,11 +5,11 @@ import datetime
 import json
 import requests
 import configparser
-import visvalingamwyatt as vw
+# import visvalingamwyatt as vw
 
 from parse_city_scope_table import get_buildings_from_city_scope
 from city_io_to_geojson import reproject
-from debugging.sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
+from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 
 try:
     import psycopg2
@@ -38,6 +38,9 @@ def executeScenario1(cursor):
         -- Insert 1 building from automated string
         INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
              """.format(building))
+
+    #error_fix_building = "INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText('MULTIPOLYGON (((567062.585589 5931984.0461 0,567053.408366 5931970.93967 0,567066.514798 5931961.76245 0,567075.692021 5931974.86888 0,567062.585589 5931984.0461 0)))'));"
+    #cursor.execute(error_fix_building)
 
 
     print("Make roads table (just geometries and road type)..")
@@ -134,7 +137,7 @@ def executeScenario1(cursor):
     geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
     # simplify result
-    simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
+    #simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
     # reproject result to WGS84 coordinate reference system
     reproject.reproject_geojson_local_to_global(geojson_path)
     print("Execution done! Open this file in a GIS:\n" + geojson_path)
