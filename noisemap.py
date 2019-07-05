@@ -8,8 +8,8 @@ import configparser
 import visvalingamwyatt as vw
 
 from parse_city_scope_table import get_buildings_from_city_scope
-from city_io_to_geojson import city_io_to_geojson, reproject
-from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
+from city_io_to_geojson import reproject
+from debugging.sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 
 try:
     import psycopg2
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     config.read('config.ini')
     usage_mode = config['SETTINGS']['USAGE_MODE']
 
-    # get the data from cityIO, convert it to geojson and write it to ./input_geojson/design/buildings/buildings.json
+    # get the data from cityIO, convert it to geojson and write it to ./input_geojson/design/buildings/buildings_error.json
     if usage_mode == 'city_scope':
         get_buildings_from_city_scope()
 

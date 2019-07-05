@@ -6,6 +6,7 @@ This project is a fork of https://github.com/Ifsttar/NoiseModelling
 - numpy
 - geomet
 - psycopg2
+- shapely
 
 For conversion of shapefiles into geoJson
 - ogr, from GDAL pip install GDAL==2.2.2 
@@ -22,7 +23,7 @@ Geojsons can be derived from the shapefiles in the `input_shape` directory using
     
 ## Start the H2 database and orbisGIS server server
 
-Run  `java -cp "bin/*:bundle/*:sys-bundle/*" org.h2.tools.Server -pg` inside the project folder
+Run  `java -cp "bin/*:bundle/*:sys-bundle/*" org.h2.tools.Server -pg -trace` inside the project folder
 
 ## Config.ini
 Chose the option of input detail

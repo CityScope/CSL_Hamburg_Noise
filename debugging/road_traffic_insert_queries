@@ -1,0 +1,85 @@
+        create table roads_geom ( the_geom GEOMETRY, NUM INTEGER, node_from INTEGER, node_to INTEGER, road_type INTEGER);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567185 5932004 0, 567046 5932097 0)'),27,0,1,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567061 5931634 0, 567121 5931711 0)'),100,2,3,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567010 5931265 0, 566969 5931187 0, 566918 5931106 0)'),99,4,5,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566918 5931106 0, 566912 5931086 0, 566901 5931063 0, 566880 5931030 0, 566846 5930995 0, 566835 5930964 0)'),26,6,7,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567091 5931611 0, 567061 5931634 0)'),25,8,2,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567015 5932043 0, 567046 5932097 0)'),24,9,1,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566971 5931985 0, 567015 5932043 0)'),22,10,9,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567396 5931434 0, 567215 5931522 0)'),21,11,12,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567215 5931522 0, 567165 5931558 0)'),23,12,13,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567121 5931711 0, 567020 5931785 0)'),98,3,14,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567165 5931558 0, 567153 5931567 0)'),20,13,15,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567539 5931771 0, 567531 5931757 0, 567475 5931671 0)'),97,16,17,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567020 5931785 0, 566892 5931880 0)'),95,14,18,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566892 5931880 0, 566788 5931947 0)'),96,18,19,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567519 5931780 0, 567418 5931848 0)'),18,20,21,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567418 5931848 0, 567288 5931935 0)'),19,21,22,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567288 5931935 0, 567185 5932004 0)'),17,22,0,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567382 5931796 0, 567251 5931885 0)'),94,23,24,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567487 5931611 0, 567658 5931532 0, 567691 5931531 0, 567740 5931558 0)'),16,25,26,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567015 5932043 0, 566889 5932130 0)'),93,9,27,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567046 5932097 0, 566923 5932179 0)'),92,1,28,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566889 5932130 0, 566923 5932179 0)'),91,27,28,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567165 5931558 0, 567091 5931419 0)'),90,13,29,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567091 5931419 0, 567010 5931265 0)'),89,29,4,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566788 5931947 0, 566690 5932011 0)'),88,19,30,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566690 5932011 0, 566579 5932084 0)'),87,30,31,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567251 5931885 0, 567148 5931954 0)'),86,24,32,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567148 5931954 0, 567015 5932043 0)'),85,32,9,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567229 5932064 0, 567157 5932112 0, 567123 5932129 0)'),84,33,34,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566892 5931880 0, 566934 5931934 0)'),13,18,35,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (566934 5931934 0, 566971 5931985 0)'),15,35,10,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567572 5931755 0, 567539 5931771 0)'),14,36,16,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567539 5931771 0, 567519 5931780 0)'),12,16,20,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567459 5931911 0, 567332 5931995 0)'),83,37,38,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567332 5931995 0, 567229 5932064 0)'),82,38,33,54);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567153 5931567 0, 567125 5931588 0)'),11,15,39,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567125 5931588 0, 567091 5931611 0)'),10,39,8,53);
+INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) VALUES (ST_GeomFromText('LINESTRING (567828 5932219 0, 567180 5931026 0)'),1,40,41,56);
+
+    drop table if exists roads_traffic;
+    create table roads_traffic ( node_from INTEGER, node_to INTEGER, load_speed DOUBLE, junction_speed DOUBLE, max_speed DOUBLE, lightVehicleCount DOUBLE, heavyVehicleCount DOUBLE);
+    INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) VALUES (40,41,43,42,65,200,650);
+
+    drop table if exists roads_dir_one;
+    drop table if exists roads_dir_two;
+
+    CREATE TABLE roads_dir_one AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount FROM roads_geom as geo,roads_traffic traff WHERE geo.node_from=traff.node_from AND geo.node_to=traff.node_to;
+    CREATE TABLE roads_dir_two AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount FROM roads_geom as geo,roads_traffic traff WHERE geo.node_to=traff.node_from AND geo.node_from=traff.node_to;
+
+    -- Collapse two direction in one table
+    drop table if exists roads_geo_and_traffic;
+
+    CREATE TABLE roads_geo_and_traffic AS select * from roads_dir_one UNION select * from roads_dir_two;
+
+    drop table if exists roads_src_global;
+
+    CREATE TABLE roads_src_global AS SELECT the_geom,BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False) as db_m from roads_geo_and_traffic;
+
+    drop table if exists roads_src;
+
+    CREATE TABLE roads_src AS SELECT the_geom,
+    BR_SpectrumRepartition(100,1,db_m) as db_m100,
+    BR_SpectrumRepartition(125,1,db_m) as db_m125,
+    BR_SpectrumRepartition(160,1,db_m) as db_m160,
+    BR_SpectrumRepartition(200,1,db_m) as db_m200,
+    BR_SpectrumRepartition(250,1,db_m) as db_m250,
+    BR_SpectrumRepartition(315,1,db_m) as db_m315,
+    BR_SpectrumRepartition(400,1,db_m) as db_m400,
+    BR_SpectrumRepartition(500,1,db_m) as db_m500,
+    BR_SpectrumRepartition(630,1,db_m) as db_m630,
+    BR_SpectrumRepartition(800,1,db_m) as db_m800,
+    BR_SpectrumRepartition(1000,1,db_m) as db_m1000,
+    BR_SpectrumRepartition(1250,1,db_m) as db_m1250,
+    BR_SpectrumRepartition(1600,1,db_m) as db_m1600,
+    BR_SpectrumRepartition(2000,1,db_m) as db_m2000,
+    BR_SpectrumRepartition(2500,1,db_m) as db_m2500,
+    BR_SpectrumRepartition(3150,1,db_m) as db_m3150,
+    BR_SpectrumRepartition(4000,1,db_m) as db_m4000,
+    BR_SpectrumRepartition(5000,1,db_m) as db_m5000 from roads_src_global;
+drop table if exists tri_lvl;
+
+    create table tri_lvl as SELECT * from
+    BR_TriGrid((select st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',750,50,1.5,2.8,75,0,0,0.23);
+

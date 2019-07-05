@@ -1,5 +1,6 @@
 pyshp
 geomet
+shapely
 psycopg2
 numpy
 requests

@@ -94,7 +94,7 @@ def get_traffic_queries():
 
 # get sql queries for the buildings
 def get_building_queries():
-    data = open_geojson(os.path.abspath(cwd+'/input_geojson/design/buildings/buildings.json'))
+    data = open_geojson(os.path.abspath(cwd+'/input_geojson/design/buildings/buildings_error.json'))
 
     sqlInsertStringsAllBuildings = []
 
