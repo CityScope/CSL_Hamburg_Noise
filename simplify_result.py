@@ -9,17 +9,19 @@ simple_geojson_path = os.path.abspath(cwd + "/results/" + "simple_result.geojson
 
 geojson = load_json(geojson_path)
 
-print(geojson)
+simplified_features = []
 
-# TODO simplify result
-simple_geom = vw.simplify_geometry(geojson['features'][0]['geometry'], ratio=0.15)
+for feature in geojson['features']:
+    # simplify feature geometry
+    print("original", len(feature['geometry']['coordinates'][0]))
+    feature['geometry'] = vw.simplify_geometry(feature['geometry'], ratio=0.15)
+    print("simple", len(feature['geometry']['coordinates'][0]))
+    simplified_features.append(feature)
 
-print(simple_geom)
-print(len(geojson['features'][0]['geometry']['coordinates'][0]))
-print(len(simple_geom['coordinates'][0]))
+geojson['features'] = simplified_features
 
-geojson['features'][0]['geometry'] = simple_geom
+
 
 # overwrite result json with reprojected result
 with open(simple_geojson_path, 'wb') as f:
-    json.dump(geojson, f)
+    json.dump(geojson, f, sort_keys=True, indent=4, separators=(',', ': '))
