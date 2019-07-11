@@ -1,0 +1,3 @@
+[submodule "city_io_to_geojson"]
+	path = city_io_to_geojson
+	url = https://github.com/andredaa/city_io_to_geojson
