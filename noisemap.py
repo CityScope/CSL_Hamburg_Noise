@@ -39,9 +39,15 @@ def executeScenario1(cursor):
         INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
              """.format(building))
 
-    #error_fix_building = "INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText('MULTIPOLYGON (((567062.585589 5931984.0461 0,567053.408366 5931970.93967 0,567066.514798 5931961.76245 0,567075.692021 5931974.86888 0,567062.585589 5931984.0461 0)))'));"
-    #cursor.execute(error_fix_building)
-
+    # Merge buildings that intersect into 1 building
+    cursor.execute("""
+       drop table if exists BUILDINGS_SIMP_MERGE;
+       create table BUILDINGS_SIMP_MERGE as select ST_UNION(ST_SIMPLIFYPRESERVETOPOLOGY(ST_buffer(ST_ACCUM(the_geom),0),0.1)) the_geom from buildings;
+       drop table if exists buildings;
+       -- create table buildings(id serial, the_geom polygon) as select null, the_geom from st_explode('BUILDINGS_SIMP_MERGE');
+       create table buildings(the_geom GEOMETRY) as select the_geom from st_explode('BUILDINGS_SIMP_MERGE');
+       drop table BUILDINGS_SIMP_MERGE;
+       """)
 
     print("Make roads table (just geometries and road type)..")
     cursor.execute("""
