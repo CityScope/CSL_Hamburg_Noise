@@ -19,7 +19,12 @@ except ImportError:
     exit(1)
 
 
-def executeScenario1(cursor):
+def load_json(json_path):
+    with open(json_path) as f:
+        return json.load(f)
+
+# Feeds the geodatabase with the design data and performs the noise computation
+def execute_scenario(cursor):
     # Scenario sample
     # Sending/Receiving geometry data using odbc connection is very slow
     # It is advised to use shape file or other storage format, so use SHPREAD or FILETABLE sql functions
@@ -142,15 +147,18 @@ def executeScenario1(cursor):
     # export result from database to geojson
     geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
-    # simplify result
+
+    # TODO simplify result
     #simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
+
     # reproject result to WGS84 coordinate reference system
-    reproject.reproject_geojson_local_to_global(geojson_path)
-    print("Execution done! Open this file in a GIS:\n" + geojson_path)
+    reprojected_result_json = reproject.reproject_geojson_local_to_global(load_json(geojson_path))
+    #overwrite result json with reprojected result
+    with open(geojson_path, 'wb') as f:
+        json.dump(reprojected_result_json, f)
 
-    with open(geojson_path) as f:
-        return json.load(f)
 
+    return reprojected_result_json
 
 def get_noise_propagation_result():
     # Define our connection string
@@ -190,7 +198,7 @@ def get_noise_propagation_result():
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid3D FOR \"org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation\";")
 
     # perform calculation
-    return executeScenario1(cursor)
+    return execute_scenario(cursor)
 
 
 if __name__ == "__main__":
@@ -205,7 +213,7 @@ if __name__ == "__main__":
     # get result json
     result = get_noise_propagation_result()
 
-    # post result to cityIO
+    # Also post result to cityIO
     if usage_mode == 'city_scope':
         post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
         r = requests.post(post_address, json=result)
