@@ -7,7 +7,7 @@ import requests
 import configparser
 import visvalingamwyatt as vw
 
-from parse_city_scope_table import get_buildings_from_city_scope
+from parse_city_scope_table import save_buildings_from_city_scope
 from city_io_to_geojson import reproject
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 
@@ -130,10 +130,10 @@ def execute_scenario(cursor):
     create table tricontouring_noise_map AS SELECT * from ST_TriangleContouring('tri_lvl','w_v1','w_v2','w_v3',31622, 100000, 316227, 1000000, 3162277, 1e+7, 31622776, 1e+20);
     -- Merge adjacent triangle into polygons (multiple polygon by row, for unique isoLevel and cellId key)
     drop table if exists multipolygon_iso;
-    create table multipolygon_iso as select ST_UNION(ST_ACCUM(the_geom)) the_geom ,idiso from tricontouring_noise_map GROUP BY IDISO, CELL_ID;
+    create table multipolygon_iso as select ST_UNION(ST_ACCUM(the_geom)) the_geom ,idiso, CELL_ID from tricontouring_noise_map GROUP BY IDISO, CELL_ID;
     -- Explode each row to keep only a polygon by row
     drop table if exists contouring_noise_map;
-    create table contouring_noise_map as select the_geom,idiso from ST_Explode('multipolygon_iso');
+    create table contouring_noise_map as select the_geom,idiso, CELL_ID from ST_Explode('multipolygon_iso');
     drop table multipolygon_iso;""")
 
     
@@ -148,19 +148,9 @@ def execute_scenario(cursor):
     geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
-    # TODO simplify result
-    simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
+    return geojson_path
 
-    # reproject result to WGS84 coordinate reference system
-    reprojected_result_json = reproject.reproject_geojson_local_to_global(load_json(geojson_path))
-    #overwrite result json with reprojected result
-    with open(geojson_path, 'wb') as f:
-        json.dump(reprojected_result_json, f)
-
-
-    return reprojected_result_json
-
-def get_noise_propagation_result():
+def compute_noise_propagation():
     # Define our connection string
     # db name has to be an absolute path
     db_name = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
@@ -208,10 +198,19 @@ if __name__ == "__main__":
 
     # get the data from cityIO, convert it to geojson and write it to ./input_geojson/design/buildings/buildings_error.json
     if usage_mode == 'city_scope':
-        get_buildings_from_city_scope()
+        save_buildings_from_city_scope()
 
-    # get result json
-    result = get_noise_propagation_result()
+    # get path to result json
+    result_path = compute_noise_propagation()
+
+    # TODO simplify result
+    # simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
+
+    # reproject result to WGS84 coordinate reference system
+    reprojected_result_json = reproject.reproject_geojson_local_to_global(load_json(geojson_path))
+    # overwrite result json with reprojected result
+    with open(geojson_path, 'wb') as f:
+        json.dump(reprojected_result_json, f)
 
     # Also post result to cityIO
     if usage_mode == 'city_scope':

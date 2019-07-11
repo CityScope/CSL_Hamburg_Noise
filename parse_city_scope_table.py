@@ -43,7 +43,7 @@ def create_buildings_json(table, grid_of_cells):
 
 
 # collects the data from city io, transforms into a geojson and saves that geojson as input for the noise calculation
-def get_buildings_from_city_scope():
+def save_buildings_from_city_scope():
     config = configparser.ConfigParser()
     config.read('config.ini')
 
