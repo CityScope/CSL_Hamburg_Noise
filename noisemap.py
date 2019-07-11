@@ -5,7 +5,7 @@ import datetime
 import json
 import requests
 import configparser
-# import visvalingamwyatt as vw
+import visvalingamwyatt as vw
 
 from parse_city_scope_table import get_buildings_from_city_scope
 from city_io_to_geojson import reproject
@@ -149,7 +149,7 @@ def execute_scenario(cursor):
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     # TODO simplify result
-    #simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
+    simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
 
     # reproject result to WGS84 coordinate reference system
     reprojected_result_json = reproject.reproject_geojson_local_to_global(load_json(geojson_path))
