@@ -11,6 +11,7 @@ project_log_andre
 
 #Calculation result shapefiles
 results/*
+input_geojson/*
 
 # User-specific stuff
 .idea/**/workspace.xml
