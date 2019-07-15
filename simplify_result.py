@@ -16,6 +16,7 @@ def load_json_from_path(json_path):
     with open(json_path) as f:
         return json.load(f)
 
+
 # the noise result is subdivided in to 4 cells, listed by cell_id. Check which cells contain buildings
 def get_cell_ids_containing_buildings(result, buildings):
     noise_result_cells_containing_buildings = []
@@ -37,7 +38,7 @@ def get_cell_ids_containing_buildings(result, buildings):
 # takes the path to a result geojson and simplifies the geometry in order to reduce file size
 def simplify_result(result_path):
     result_geojson = load_json_from_path(result_path)
-    buildings_geojson = config['SETTINGS']['INPUT_JSON_BUILDINGS']
+    buildings_geojson = load_json_from_path(config['SETTINGS']['INPUT_JSON_BUILDINGS'])
     areas_containing_buildings = get_cell_ids_containing_buildings(result_geojson, buildings_geojson)
     simplified_features = []
 
