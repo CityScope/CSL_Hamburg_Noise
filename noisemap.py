@@ -216,9 +216,11 @@ if __name__ == "__main__":
     # Also post result to cityIO
     if usage_mode == 'city_scope':
         post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-        r = requests.post(post_address, json=result)
+        print(result)
+        r = requests.post(post_address, json=json.dumps(result))
 
         if not r.status_code == 200:
             print("could not post result to cityIO")
             print("Error code", r.status_code)
-
+        else:
+            print("Successfully posted to cityIO", r.status_code)
