@@ -2,11 +2,13 @@
 
 This project is a fork of https://github.com/Ifsttar/NoiseModelling
 
-## Requirements
-- numpy
+## Requirementsvisvalingamwyatt
+- pyshp
 - geomet
-- psycopg2
 - shapely
+- psycopg2
+- numpy
+- requests
 
 For conversion of shapefiles into geoJson
 - ogr, from GDAL pip install GDAL==2.2.2 
