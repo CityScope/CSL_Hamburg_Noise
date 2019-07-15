@@ -5,11 +5,11 @@ import datetime
 import json
 import requests
 import configparser
-import visvalingamwyatt as vw
 
 from parse_city_scope_table import save_buildings_from_city_scope
 from city_io_to_geojson import reproject
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
+from simplify_result import simplify_result
 
 try:
     import psycopg2
@@ -18,10 +18,6 @@ except ImportError:
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 
-
-def load_json(json_path):
-    with open(json_path) as f:
-        return json.load(f)
 
 # Feeds the geodatabase with the design data and performs the noise computation
 def execute_scenario(cursor):
@@ -37,7 +33,7 @@ def execute_scenario(cursor):
     """)
     buildings_queries = get_building_queries()
     for building in buildings_queries:
-        print(building)
+        print('building:', building)
         # Inserting building into database
         cursor.execute("""
         -- Insert 1 building from automated string
@@ -61,7 +57,7 @@ def execute_scenario(cursor):
         """)
     roads_queries = get_road_queries()
     for road in roads_queries:
-        print(road)
+        print('road:', road)
         cursor.execute("""{0}""".format(road))
 
     print("Make traffic information table..")
@@ -136,19 +132,15 @@ def execute_scenario(cursor):
     create table contouring_noise_map as select the_geom,idiso, CELL_ID from ST_Explode('multipolygon_iso');
     drop table multipolygon_iso;""")
 
-    
     cwd = os.path.dirname(os.path.abspath(__file__))
-    # Now save in a shape file
-    time_stamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    # Save result as shapefile
-    # shapePath = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.shp")
-    # cursor.execute("CALL SHPWrite('" + shapePath + "', 'CONTOURING_NOISE_MAP');")
 
     # export result from database to geojson
+    time_stamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
     geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
+
 
 def compute_noise_propagation():
     # Define our connection string
@@ -165,8 +157,6 @@ def compute_noise_propagation():
     # conn.cursor will return a cursor object, you can use this cursor to perform queries
     cursor = conn.cursor()
     print("Connected!\n")
-
-        
 
     # Init spatial features
     cursor.execute("CREATE ALIAS IF NOT EXISTS H2GIS_SPATIAL FOR \"org.h2gis.functions.factory.H2GISFunctions.load\";")
@@ -196,27 +186,27 @@ if __name__ == "__main__":
     config.read('config.ini')
     usage_mode = config['SETTINGS']['USAGE_MODE']
 
-    # get the data from cityIO, convert it to geojson and write it to ./input_geojson/design/buildings/buildings_error.json
+    # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
     if usage_mode == 'city_scope':
         save_buildings_from_city_scope()
 
     # get path to result json
     result_path = compute_noise_propagation()
-
-    # TODO simplify result
-    # simple_geom = vw.simplify_geometry(geojson_path, threshold=simplification)
+    # simplify result geometry
+    simplified_result = simplify_result(result_path)
 
     # reproject result to WGS84 coordinate reference system
-    reprojected_result_json = reproject.reproject_geojson_local_to_global(load_json(geojson_path))
-    # overwrite result json with reprojected result
-    with open(geojson_path, 'wb') as f:
-        json.dump(reprojected_result_json, f)
+    reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
+
+    # finally overwrite result json with simplified & reprojected result
+    with open(result_path, 'wb') as f:
+        json.dump(reprojected_result, f)
 
     # Also post result to cityIO
     if usage_mode == 'city_scope':
         post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-        print(result)
-        r = requests.post(post_address, json=json.dumps(result))
+        print(reprojected_result)
+        r = requests.post(post_address, json=json.dumps(reprojected_result))
 
         if not r.status_code == 200:
             print("could not post result to cityIO")
