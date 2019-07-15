@@ -39,6 +39,13 @@ noise_road_types = {
 
 all_roads = []
 
+
+# opens a json from path
+def open_geojson(path):
+    with open(path) as f:
+        return json.load(f)
+
+
 # return a list of sql insert-queries to insert all roads into sql table
 def get_road_queries():
     features = get_roads_features()
@@ -68,62 +75,57 @@ def get_road_queries():
         all_roads.append(road_info)
 
     nodes = create_nodes(all_roads)
-    sqlInsertStrings = []
+    sql_insert_strings = []
     for road in all_roads:
-        sqlInsertString = get_insert_query_for_road(road, nodes)
-        sqlInsertStrings.append(sqlInsertString)
+        sql_insert_string = get_insert_query_for_road(road, nodes)
+        sql_insert_strings.append(sql_insert_string)
 
-    return sqlInsertStrings
+    return sql_insert_strings
+
 
 # returns sql queries for the traffic table,
 # TODO for now creates traffic only for roads of type 56
 # TODO traffic counts are still subjective numbers
 def get_traffic_queries():
-    sqlInsertStringsNoisyRoads = []
+    sql_insert_strings_noisy_roads = []
     nodes = create_nodes(all_roads)
     for road in all_roads:
         if road.is_noisy():
             node_from = get_node_for_point(road.get_start_point(), nodes)
             node_to = get_node_for_point(road.get_end_point(), nodes)
 
-            sqlInsertString = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
+            sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
                               "VALUES ({0},{1},43,42,65,200,650);".format(node_from, node_to)
-            sqlInsertStringsNoisyRoads.append(sqlInsertString)
+            sql_insert_strings_noisy_roads.append(sql_insert_string)
 
-    return sqlInsertStringsNoisyRoads
+    return sql_insert_strings_noisy_roads
+
 
 # get sql queries for the buildings
 def get_building_queries():
-    data = open_geojson(os.path.abspath(cwd+'/input_geojson/design/buildings/buildings_error.json'))
-
-    sqlInsertStringsAllBuildings = []
+    data = open_geojson(config['SETTINGS']['INPUT_JSON_BUILDINGS'])
+    sql_insert_strings_all_buildings = []
 
     for feature in data['features']:
-        buildingCoordinates = ''
+        building_coordinates = ''
         try:
-            print(feature)
-            print(feature['geometry']['coordinates'])
+            for coordinates in feature['geometry']['coordinates']:
+                for coordinate in coordinates:
+                    coordinate_string = str(coordinate[0]) + ' ' + str(coordinate[1]) + ' ' + str(0) + ','
+                    building_coordinates += coordinate_string
+            # remove trailing comma of last coordinate
+            building_coordinates = building_coordinates[:-1]
+            # build string for SQL query
+            sql_insert_string = "'MULTIPOLYGON (((" + building_coordinates + ")))'"
+
+            sql_insert_strings_all_buildings.append(sql_insert_string)
         except:
             print("invalid json")
             print(feature)
             exit()
-        for coordinates in feature['geometry']['coordinates']:
-            for coordinate in coordinates:
-                print('building', coordinate)
-                coordinateString = str(coordinate[0]) + ' ' + str(coordinate[1]) + ' ' + str(0) + ','
-                buildingCoordinates += coordinateString
-        # remove trailing comma of last coordinate
-        buildingCoordinates = buildingCoordinates[:-1]
-        # build string for SQL query
-        sqlInsertString = "'MULTIPOLYGON (((" + buildingCoordinates + ")))'"
 
-        sqlInsertStringsAllBuildings.append(sqlInsertString)
+    return sql_insert_strings_all_buildings
 
-    return sqlInsertStringsAllBuildings
-
-def open_geojson(path):
-    with open(path) as f:
-        return json.load(f)
 
 # merges the design input for roads and the static road features
 # returns a list of geojson features containing all relevant roads
@@ -149,6 +151,7 @@ def get_roads_features():
 
     return road_network
 
+
 # create nodes for all roads - nodes are connection points of roads
 # TODO: do not connect railway and roads
 # TODO : do not connect ends of multilinestring
@@ -167,13 +170,15 @@ def create_nodes(all_roads):
             unique_nodes.append(node)
     return unique_nodes
 
+
 def get_node_for_point(point, nodes):
-    dictOfNodes = {i: nodes[i] for i in range(0, len(nodes))}
-    for node_id, node in dictOfNodes.iteritems():
+    dict_of_nodes = {i: nodes[i] for i in range(0, len(nodes))}
+    for node_id, node in dict_of_nodes.iteritems():
         if point == node:
             return node_id
     print('could not find node for point', point)
     exit()
+
 
 def get_road_type(road_properties):
     # if not in road types continue
@@ -184,14 +189,16 @@ def get_road_type(road_properties):
     print('no matching noise road_type_found for', road_properties['name'])
     return 0
 
+
 def get_insert_query_for_road(road, nodes):
     node_from = get_node_for_point(road.get_start_point(), nodes)
     node_to = get_node_for_point(road.get_end_point(), nodes)
 
-    sqlInsertString = "INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) " \
+    sql_insert_string = "INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) " \
                       "VALUES (ST_GeomFromText('{0}'),{1},{2},{3},{4});".format(road.get_geom(), road.get_road_id(),
                                                                               node_from, node_to, road.get_road_type_for_query())
-    return sqlInsertString
+    return sql_insert_string
+
 
 def add_third_dimension_to_features(features):
     for feature in features:
@@ -201,12 +208,13 @@ def add_third_dimension_to_features(features):
             add_third_dimension_to_multi_line_feature(feature)
         # TODO use this for buildings as well
 
+
 def add_third_dimension_to_multi_line_feature(feature):
     for pointList in feature['geometry']['coordinates']:
         for point in pointList:
             point.append(0)
 
+
 def add_third_dimension_to_line_feature(feature):
     for point in feature['geometry']['coordinates']:
         point.append(0)
-
