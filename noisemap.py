@@ -205,8 +205,7 @@ if __name__ == "__main__":
     # Also post result to cityIO
     if usage_mode == 'city_scope':
         post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-        print(reprojected_result)
-        r = requests.post(post_address, json=json.dumps(reprojected_result))
+        r = requests.post(post_address, json=reprojected_result)
 
         if not r.status_code == 200:
             print("could not post result to cityIO")
