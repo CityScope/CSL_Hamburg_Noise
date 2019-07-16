@@ -38,22 +38,20 @@ def get_cell_ids_containing_buildings(result, buildings):
 # takes the path to a result geojson and simplifies the geometry in order to reduce file size
 def simplify_result(result_path):
     result_geojson = load_json_from_path(result_path)
-    buildings_geojson = load_json_from_path(config['SETTINGS']['INPUT_JSON_BUILDINGS'])
-    areas_containing_buildings = get_cell_ids_containing_buildings(result_geojson, buildings_geojson)
     simplified_features = []
 
-    # simplify all features
-    # cell_id here refers to 1 of 4 cells that the noise software creates to split the calculated area into a grid
-    # they are not related to city_scope cells
     for feature in result_geojson['features']:
-        # heavily simplify feature geometry if not in a cell containing buildings.
-        if feature['properties']['cell_id'] not in areas_containing_buildings:
-            feature['geometry'] = vw.simplify_geometry(feature['geometry'], ratio=0.3)
+        # do not simplify features with interior rings as that leads to error
+        if (len(feature['geometry']['coordinates']) >1):
             simplified_features.append(feature)
-        # simplify only lightly if cell_id contains buildings
-        else:
-            feature['geometry'] = vw.simplify_geometry(feature['geometry'], ratio=0.8)
+            continue
+        # only simplify complex geometries, as simple geometries might be buildings
+        if len(feature['geometry']['coordinates'][0]) < 20:
             simplified_features.append(feature)
+            continue
+        # simplify complex polygons
+        feature['geometry'] = vw.simplify_geometry(feature['geometry'], threshold=0.85)
+        simplified_features.append(feature)
 
     result_geojson['features'] = simplified_features
 
