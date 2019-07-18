@@ -6,8 +6,7 @@ import json
 import requests
 import configparser
 
-from parse_city_scope_table import save_buildings_from_city_scope
-from city_io_to_geojson import reproject
+
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 from simplify_result import simplify_result
 
@@ -182,6 +181,9 @@ def compute_noise_propagation():
 
 
 if __name__ == "__main__":
+    from parse_city_scope_table import save_buildings_from_city_scope
+    from city_io_to_geojson import reproject
+
     config = configparser.ConfigParser()
     config.read('config.ini')
     usage_mode = config['SETTINGS']['USAGE_MODE']
