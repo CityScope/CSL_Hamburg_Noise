@@ -9,11 +9,12 @@ import configparser
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 
+
 # TODO: all coordinates for roads and buildings are currently set to z level 0
 
 # settings for the static input data
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read(cwd+'/config.ini')
 
 include_rail_road = config['SETTINGS'].getboolean('INCLUDE_RAILROAD')
 include_lower_main_road = config['SETTINGS'].getboolean('INCLUDE_LOWER_MAIN_ROAD')
@@ -103,7 +104,7 @@ def get_traffic_queries():
 
 # get sql queries for the buildings
 def get_building_queries():
-    data = open_geojson(config['SETTINGS']['INPUT_JSON_BUILDINGS'])
+    data = open_geojson(cwd +"/"+config['SETTINGS']['INPUT_JSON_BUILDINGS'])
     sql_insert_strings_all_buildings = []
 
     for feature in data['features']:
@@ -130,7 +131,7 @@ def get_building_queries():
 # merges the design input for roads and the static road features
 # returns a list of geojson features containing all relevant roads
 def get_roads_features():
-    road_network = open_geojson(road_network_json)['features']
+    road_network = open_geojson(cwd+"/"+road_network_json)['features']
     static_features = []
 
     # set source for upper main road
