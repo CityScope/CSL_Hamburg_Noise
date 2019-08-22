@@ -180,17 +180,9 @@ def compute_noise_propagation():
     return execute_scenario(cursor)
 
 
-if __name__ == "__main__":
+def get_noise_result_address():
     from parse_city_scope_table import save_buildings_from_city_scope
     from city_io_to_geojson import reproject
-
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    usage_mode = config['SETTINGS']['USAGE_MODE']
-
-    # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
-    if usage_mode == 'city_scope':
-        save_buildings_from_city_scope()
 
     # get path to result json
     result_path = compute_noise_propagation()
@@ -204,13 +196,7 @@ if __name__ == "__main__":
     with open(result_path, 'wb') as f:
         json.dump(reprojected_result, f)
 
-    # Also post result to cityIO
-    if usage_mode == 'city_scope':
-        post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-        r = requests.post(post_address, json=reprojected_result)
+    return result_path
 
-        if not r.status_code == 200:
-            print("could not post result to cityIO")
-            print("Error code", r.status_code)
-        else:
-            print("Successfully posted to cityIO", r.status_code)
+if __name__ == "__main__":
+    get_noise_result_address()
