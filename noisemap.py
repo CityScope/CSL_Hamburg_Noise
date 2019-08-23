@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 import os
-import datetime
+from datetime import datetime
 import json
 import requests
 import configparser
@@ -111,10 +111,10 @@ def execute_scenario(cursor):
 
     print("Please wait, sound propagation from sources through buildings..")
 
-    cursor.execute("""drop table if exists tri_lvl;
-    create table tri_lvl as SELECT * from
-    BR_TriGrid((select st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',750,50,1.5,2.8,75,0,0,0.23);
-    """)
+    cursor.execute("""drop table if exists tri_lvl; create table tri_lvl as SELECT * from BR_TriGrid((select 
+    st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',
+    {max_prop_distance},{max_wall_seeking_distance},{road_with},{receiver_densification},{max_triangle_area},
+    {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(**settings))
 
     print("Computation done !")
 
@@ -134,7 +134,7 @@ def execute_scenario(cursor):
     cwd = os.path.dirname(os.path.abspath(__file__))
 
     # export result from database to geojson
-    time_stamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
+    time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
     geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
@@ -198,5 +198,131 @@ def get_noise_result_address():
 
     return result_path
 
+def get_test_settings():
+    test_sets = [
+        {
+            'settings_name': 'standard settings',
+            'max_prop_distance': 750, # the lower the less accurate
+            'max_wall_seeking_distance': 50, # the lower  the less accurate
+            'road_with': 1.5, # the higher the less accurate
+            'receiver_densification': 2.8, # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 0, # the higher the less accurate
+            'sound_diffraction_order': 0, # the higher the less accurate
+            'wall_absorption': 0.23, # the higher the less accurate
+        },
+        {
+            'settings_name': 'very fast',
+            'max_prop_distance': 500, # the lower the less accurate
+            'max_wall_seeking_distance': 25, # the lower  the less accurate
+            'road_with': 15, # the higher the less accurate
+            'receiver_densification': 8.4, # the higher the less accurate
+            'max_triangle_area': 275,  # the higher the less accurate
+            'sound_reflection_order': 0, # the higher the less accurate ##  needs to be natural number?
+            'sound_diffraction_order': 0, # the higher the less accurate
+            'wall_absorption': 0.6, # the higher the less accurate
+        },
+        {
+            'settings_name': 'min wall seeking distance',
+            'max_prop_distance': 750, # the lower the less accurate
+            'max_wall_seeking_distance': 25, # the lower  the less accurate
+            'road_with': 1.5, # the higher the less accurate
+            'receiver_densification': 2.8, # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 0, # the higher the less accurate
+            'sound_diffraction_order': 0, # the higher the less accurate
+            'wall_absorption': 0.23, # the higher the less accurate
+        },
+        {
+            'settings_name': 'min prop distance',
+            'max_prop_distance': 500, # the lower the less accurate
+            'max_wall_seeking_distance': 50, # the lower  the less accurate
+            'road_with': 1.5, # the higher the less accurate
+            'receiver_densification': 2.8, # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 0, # the higher the less accurate
+            'sound_diffraction_order': 0, # the higher the less accurate
+            'wall_absorption': 0.23, # the higher the less accurate
+        },
+        {
+            'settings_name': 'max triangle area',
+            'max_prop_distance': 750,  # the lower the less accurate
+            'max_wall_seeking_distance': 50,  # the lower  the less accurate
+            'road_with': 1.5,  # the higher the less accurate
+            'receiver_densification': 2.8,  # the higher the less accurate
+            'max_triangle_area': 275,  # the higher the less accurate
+            'sound_reflection_order': 0,  # the higher the less accurate
+            'sound_diffraction_order': 0,  # the higher the less accurate
+            'wall_absorption': 0.23,  # the higher the less accurate
+        },
+        {
+            'settings_name': 'max road with',
+            'max_prop_distance': 750,  # the lower the less accurate
+            'max_wall_seeking_distance': 50,  # the lower  the less accurate
+            'road_with': 15,  # the higher the less accurate
+            'receiver_densification': 2.8,  # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 0,  # the higher the less accurate
+            'sound_diffraction_order': 0,  # the higher the less accurate
+            'wall_absorption': 0.23,  # the higher the less accurate
+        },
+        {
+            'settings_name': 'max wall absorption',
+            'max_prop_distance': 750,  # the lower the less accurate
+            'max_wall_seeking_distance': 50,  # the lower  the less accurate
+            'road_with': 1.5,  # the higher the less accurate
+            'receiver_densification': 2.8,  # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 0,  # the higher the less accurate
+            'sound_diffraction_order': 0,  # the higher the less accurate
+            'wall_absorption': 0.6,  # the higher the less accurate
+        }, {
+            'settings_name': 'change sound reflection order',
+            'max_prop_distance': 750,  # the lower the less accurate
+            'max_wall_seeking_distance': 50,  # the lower  the less accurate
+            'road_with': 1.5,  # the higher the less accurate
+            'receiver_densification': 2.8,  # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 2,  # the higher the less accurate
+            'sound_diffraction_order': 0,  # the higher the less accurate
+            'wall_absorption': 0.23,  # the higher the less accurate
+        }, {
+            'settings_name': 'change sound diffraction order',
+            'max_prop_distance': 750,  # the lower the less accurate
+            'max_wall_seeking_distance': 50,  # the lower  the less accurate
+            'road_with': 1.5,  # the higher the less accurate
+            'receiver_densification': 2.8,  # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 0,  # the higher the less accurate
+            'sound_diffraction_order': 1,  # the higher the less accurate
+            'wall_absorption': 0.23,  # the higher the less accurate
+        }, {
+            'settings_name': 'change sound reflection & diffraction order',
+            'max_prop_distance': 750,  # the lower the less accurate
+            'max_wall_seeking_distance': 50,  # the lower  the less accurate
+            'road_with': 1.5,  # the higher the less accurate
+            'receiver_densification': 2.8,  # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 2,  # the higher the less accurate
+            'sound_diffraction_order': 1,  # the higher the less accurate
+            'wall_absorption': 0.23,  # the higher the less accurate
+        },
+    ]
+
+    return test_sets
+
+
 if __name__ == "__main__":
-    get_noise_result_address()
+    # create tests sets
+    # log computation time and result time (identify result)
+    durations = {}
+
+    for setting in get_test_settings():
+        settings = setting
+        print(settings['settings_name'])
+        start_time = datetime.now()
+        get_noise_result_address()
+        duration = datetime.now() - start_time
+        durations.update({settings['settings_name']: duration})
+
+    print(durations)
