@@ -1,0 +1,11 @@
+{
+'min wall seeking distance': datetime.timedelta(0, 901, 710368),
+ 'min prop distance': datetime.timedelta(0, 838, 380934),
+  'change sound diffraction order': datetime.timedelta(0, 910, 816060),
+   'max wall absorption': datetime.timedelta(0, 870, 951626),
+    'very fast': datetime.timedelta(0, 509, 496249),
+     'max triangle area': datetime.timedelta(0, 600, 204646),
+      'change sound reflection & diffraction order': datetime.timedelta(0, 992, 476913),
+       'standard settings': datetime.timedelta(0, 909, 390595),
+        'max road with': datetime.timedelta(0, 702, 4355),
+         'change sound reflection order': datetime.timedelta(0, 957, 904114)}

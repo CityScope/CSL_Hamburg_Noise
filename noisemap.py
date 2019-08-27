@@ -30,14 +30,17 @@ def execute_scenario(cursor):
     drop table if exists buildings;
     create table buildings ( the_geom GEOMETRY );
     """)
-    buildings_queries = get_building_queries()
-    for building in buildings_queries:
-        print('building:', building)
+
+    # TODO : insert all buildings again!
+    #buildings_queries = get_building_queries()
+    building = get_building_queries()[0]
+    #for building in buildings_queries:
+    print('building:', building)
         # Inserting building into database
-        cursor.execute("""
-        -- Insert 1 building from automated string
-        INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
-             """.format(building))
+    cursor.execute("""
+    -- Insert 1 building from automated string
+    INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
+    """.format(building))
 
     # Merge buildings that intersect into 1 building
     cursor.execute("""
@@ -118,24 +121,34 @@ def execute_scenario(cursor):
 
     print("Computation done !")
 
-    print("Create isocountour and save it as a shapefile in the working folder..")
+    print("Create isocountour and save it as a geojson in the working folder..")
 
     cursor.execute("""
     drop table if exists tricontouring_noise_map;
+    -- create table tricontouring_noise_map AS SELECT * from ST_SimplifyPreserveTopology(ST_TriangleContouring('tri_lvl','w_v1','w_v2','w_v3',31622, 100000, 316227, 1000000, 3162277, 1e+7, 31622776, 1e+20));
     create table tricontouring_noise_map AS SELECT * from ST_TriangleContouring('tri_lvl','w_v1','w_v2','w_v3',31622, 100000, 316227, 1000000, 3162277, 1e+7, 31622776, 1e+20);
     -- Merge adjacent triangle into polygons (multiple polygon by row, for unique isoLevel and cellId key)
     drop table if exists multipolygon_iso;
     create table multipolygon_iso as select ST_UNION(ST_ACCUM(the_geom)) the_geom ,idiso, CELL_ID from tricontouring_noise_map GROUP BY IDISO, CELL_ID;
     -- Explode each row to keep only a polygon by row
+    drop table if exists simple_noise_map;
+    create table simple_noise_map as select the_geom,idiso, CELL_ID from ST_SimplifyPreserveTopology('multipolygon_iso', 2);
     drop table if exists contouring_noise_map;
-    create table contouring_noise_map as select the_geom,idiso, CELL_ID from ST_Explode('multipolygon_iso');
+    create table contouring_noise_map as select the_geom,idiso, CELL_ID from ST_Explode('multipolygon_iso'); 
     drop table multipolygon_iso;""")
+
+    # simplify might not work with tables, just geoms
+
+    # TODO try this way
+    # https: // trac.osgeo.org / postgis / wiki / UsersWikiSimplifyWithTopologyExt
 
     cwd = os.path.dirname(os.path.abspath(__file__))
 
     # export result from database to geojson
-    time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
+    # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
+    name = 'simp_' + settings['settings_name']
+    geojson_path = os.path.abspath(cwd+"/results/" + str(name) + ".geojson")
+    cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
@@ -161,6 +174,8 @@ def compute_noise_propagation():
     cursor.execute("CREATE ALIAS IF NOT EXISTS H2GIS_SPATIAL FOR \"org.h2gis.functions.factory.H2GISFunctions.load\";")
     cursor.execute("CALL H2GIS_SPATIAL();")
 
+    # TODO To make faster : not necesscary to initate every time??
+    # TODO : call "execute scenario" from grid listener?=
     # Init NoiseModelling functions
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_PtGrid3D FOR \"org.orbisgis.noisemap.h2.BR_PtGrid3D.noisePropagation\";")
@@ -187,30 +202,31 @@ def get_noise_result_address():
     # get path to result json
     result_path = compute_noise_propagation()
     # simplify result geometry
-    simplified_result = simplify_result(result_path)
+    # simplified_result = simplify_result(result_path)
 
     # reproject result to WGS84 coordinate reference system
-    reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
+    # TODO comment in again reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
 
     # finally overwrite result json with simplified & reprojected result
     with open(result_path, 'wb') as f:
-        json.dump(reprojected_result, f)
+        #json.dump(reprojected_result, f)
+        json.dump(json.load(result_path), f)
 
     return result_path
 
 def get_test_settings():
     test_sets = [
-        {
-            'settings_name': 'standard settings',
-            'max_prop_distance': 750, # the lower the less accurate
-            'max_wall_seeking_distance': 50, # the lower  the less accurate
-            'road_with': 1.5, # the higher the less accurate
-            'receiver_densification': 2.8, # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 0, # the higher the less accurate
-            'sound_diffraction_order': 0, # the higher the less accurate
-            'wall_absorption': 0.23, # the higher the less accurate
-        },
+        # {
+        #     'settings_name': 'standard settings',
+        #     'max_prop_distance': 750, # the lower the less accurate
+        #     'max_wall_seeking_distance': 50, # the lower  the less accurate
+        #     'road_with': 1.5, # the higher the less accurate
+        #     'receiver_densification': 2.8, # the higher the less accurate
+        #     'max_triangle_area': 75,  # the higher the less accurate
+        #     'sound_reflection_order': 0, # the higher the less accurate
+        #     'sound_diffraction_order': 0, # the higher the less accurate
+        #     'wall_absorption': 0.23, # the higher the less accurate
+        # },
         {
             'settings_name': 'very fast',
             'max_prop_distance': 500, # the lower the less accurate
@@ -313,16 +329,33 @@ def get_test_settings():
 
 
 if __name__ == "__main__":
+    import time
     # create tests sets
     # log computation time and result time (identify result)
+
+    # todo : try adjusting
+    # https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
+    # todo : try shifting to GB center
+    # https: // github.com / Ifsttar / NoiseModelling / blob / master / noisemap - core / src / main / java / org / orbisgis / noisemap / core / jdbc / JdbcNoiseMap.java  # L68
+    # todo: merge buildings that are conecting
+
+
+
     durations = {}
 
     for setting in get_test_settings():
         settings = setting
         print(settings['settings_name'])
-        start_time = datetime.now()
+        start_time = time.time()
         get_noise_result_address()
-        duration = datetime.now() - start_time
+        print("****** calc completed *******")
+        duration = time.time() - start_time
         durations.update({settings['settings_name']: duration})
+        file = open('times_log.txt', 'a')
+        file.write('\n')
+        file.write(settings['settings_name'] + ': ' + str(duration) + '\n')
+        file.write('\n')
+        file.close()
+        print(durations)
 
     print(durations)
