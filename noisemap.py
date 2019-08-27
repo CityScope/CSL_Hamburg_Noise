@@ -132,15 +132,12 @@ def execute_scenario(cursor):
     create table multipolygon_iso as select ST_UNION(ST_ACCUM(the_geom)) the_geom ,idiso, CELL_ID from tricontouring_noise_map GROUP BY IDISO, CELL_ID;
     -- Explode each row to keep only a polygon by row
     drop table if exists simple_noise_map;
-    create table simple_noise_map as select the_geom,idiso, CELL_ID from ST_SimplifyPreserveTopology('multipolygon_iso', 2);
+    -- example form internet : CREATE TABLE roads2 AS SELECT id_way, ST_PRECISIONREDUCER(ST_SIMPLIFYPRESERVETOPOLOGY(THE_GEOM),0.1),1) the_geom, highway_type t FROM roads; 
+    -- ST_SimplifyPreserveTopology(geometry geomA, float tolerance);
+    create table simple_noise_map as select ST_SIMPLIFYPRESERVETOPOLOGY(the_geom, 2) the_geom, idiso, CELL_ID from multipolygon_iso;
     drop table if exists contouring_noise_map;
-    create table contouring_noise_map as select the_geom,idiso, CELL_ID from ST_Explode('multipolygon_iso'); 
-    drop table multipolygon_iso;""")
-
-    # simplify might not work with tables, just geoms
-
-    # TODO try this way
-    # https: // trac.osgeo.org / postgis / wiki / UsersWikiSimplifyWithTopologyExt
+    create table CONTOURING_NOISE_MAP as select the_geom,idiso, CELL_ID from ST_Explode('simple_noise_map'); 
+    drop table simple_noise_map; drop table multipolygon_iso;""")
 
     cwd = os.path.dirname(os.path.abspath(__file__))
 
@@ -148,7 +145,6 @@ def execute_scenario(cursor):
     # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
     name = 'simp_' + settings['settings_name']
     geojson_path = os.path.abspath(cwd+"/results/" + str(name) + ".geojson")
-    cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
@@ -196,37 +192,21 @@ def compute_noise_propagation():
 
 
 def get_noise_result_address():
-    from parse_city_scope_table import save_buildings_from_city_scope
-    from city_io_to_geojson import reproject
-
-    # get path to result json
-    result_path = compute_noise_propagation()
-    # simplify result geometry
-    # simplified_result = simplify_result(result_path)
-
-    # reproject result to WGS84 coordinate reference system
-    # TODO comment in again reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
-
-    # finally overwrite result json with simplified & reprojected result
-    with open(result_path, 'wb') as f:
-        #json.dump(reprojected_result, f)
-        json.dump(json.load(result_path), f)
-
-    return result_path
+    return compute_noise_propagation()
 
 def get_test_settings():
     test_sets = [
-        # {
-        #     'settings_name': 'standard settings',
-        #     'max_prop_distance': 750, # the lower the less accurate
-        #     'max_wall_seeking_distance': 50, # the lower  the less accurate
-        #     'road_with': 1.5, # the higher the less accurate
-        #     'receiver_densification': 2.8, # the higher the less accurate
-        #     'max_triangle_area': 75,  # the higher the less accurate
-        #     'sound_reflection_order': 0, # the higher the less accurate
-        #     'sound_diffraction_order': 0, # the higher the less accurate
-        #     'wall_absorption': 0.23, # the higher the less accurate
-        # },
+        {
+            'settings_name': 'standard settings',
+            'max_prop_distance': 750, # the lower the less accurate
+            'max_wall_seeking_distance': 50, # the lower  the less accurate
+            'road_with': 1.5, # the higher the less accurate
+            'receiver_densification': 2.8, # the higher the less accurate
+            'max_triangle_area': 75,  # the higher the less accurate
+            'sound_reflection_order': 0, # the higher the less accurate
+            'sound_diffraction_order': 0, # the higher the less accurate
+            'wall_absorption': 0.23, # the higher the less accurate
+        },
         {
             'settings_name': 'very fast',
             'max_prop_distance': 500, # the lower the less accurate
@@ -347,7 +327,7 @@ if __name__ == "__main__":
         settings = setting
         print(settings['settings_name'])
         start_time = time.time()
-        get_noise_result_address()
+        compute_noise_propagation()
         print("****** calc completed *******")
         duration = time.time() - start_time
         durations.update({settings['settings_name']: duration})
