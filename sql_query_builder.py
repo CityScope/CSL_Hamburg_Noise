@@ -96,7 +96,7 @@ def get_traffic_queries():
             node_to = get_node_for_point(road.get_end_point(), nodes)
 
             sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
-                              "VALUES ({0},{1},43,42,65,200,650);".format(node_from, node_to)
+                              "VALUES ({0},{1},33,32,50,200,5);".format(node_from, node_to)
             sql_insert_strings_noisy_roads.append(sql_insert_string)
 
     return sql_insert_strings_noisy_roads
@@ -109,6 +109,12 @@ def get_building_queries():
 
     for feature in data['features']:
         building_coordinates = ''
+
+        # ensure that the coordinates form a closed linestring
+        if feature['geometry']['coordinates'][0] is not feature['geometry']['coordinates'][-1]:
+            print("append first coordinate to close loop")
+            feature['geometry']['coordinates'].append(feature['geometry']['coordinates'][0])
+
         try:
             for coordinates in feature['geometry']['coordinates']:
                 for coordinate in coordinates:
@@ -137,8 +143,8 @@ def get_roads_features():
     # set source for upper main road
     if upper_main_road_as_multi_line:
         static_features.append(open_geojson(upper_main_road_multi_line_json)['features'])
-    else:
-        static_features.append(open_geojson(upper_main_road_single_line_json)['features'])
+    #else:
+    #    static_features.append(open_geojson(upper_main_road_single_line_json)['features'])
 
     if include_lower_main_road:
         static_features.append(open_geojson(main_road_lower_multi_line_json)['features'])
@@ -182,13 +188,15 @@ def get_node_for_point(point, nodes):
 
 
 def get_road_type(road_properties):
-    # if not in road types continue
-    for output_road_type in noise_road_types.keys():
-        if road_properties['name'] == output_road_type:
-            return noise_road_types[output_road_type]
-
-    print('no matching noise road_type_found for', road_properties['name'])
-    return 0
+    return 54
+    #
+    # # if not in road types continue
+    # for output_road_type in noise_road_types.keys():
+    #     if road_properties['name'] == output_road_type:
+    #         return noise_road_types[output_road_type]
+    #
+    # print('no matching noise road_type_found for', road_properties['name'])
+    # return 0
 
 
 def get_insert_query_for_road(road, nodes):

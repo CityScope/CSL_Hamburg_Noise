@@ -34,7 +34,9 @@ class RoadInfo:
         return (self.geom)
 
     def is_noisy(self):
-        if self.get_road_type_for_query() == 56:
-            return True
+        return True
 
-        return False
+        #if self.get_road_type_for_query() == 56:
+         #   return True
+
+#        return False
