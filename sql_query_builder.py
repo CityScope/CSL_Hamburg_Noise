@@ -53,7 +53,7 @@ def get_road_queries():
     add_third_dimension_to_features(features)
 
     for feature in features:
-        fid = feature['properties']['fid']
+        road_id = feature['properties']['road_id']
         road_type = get_road_type(feature['properties'])
         coordinates = feature['geometry']['coordinates']
         # input road type might not be defined. road is not imported # TODO consider using a fallback
@@ -72,8 +72,8 @@ def get_road_queries():
             # build string containing all coordinates
 
         geom = wkt.dumps(feature['geometry'], decimals=0)
-        traffic_info_from_csv = get_road_info_for_road_id(fid)
-        road_info = RoadInfo.RoadInfo(fid, road_type, start_point, end_point, geom, traffic_info_from_csv)
+        traffic_info_from_csv = get_road_info_for_road_id(road_id)
+        road_info = RoadInfo.RoadInfo(road_id, road_type, start_point, end_point, geom, traffic_info_from_csv)
         all_roads.append(road_info)
 
     nodes = create_nodes(all_roads)
@@ -86,37 +86,25 @@ def get_road_queries():
 
 
 # returns sql queries for the traffic table,
-def get_traffic_queries(off_peak=False):
+def get_traffic_queries():
     sql_insert_strings_noisy_roads = []
     nodes = create_nodes(all_roads)
     for road in all_roads:
+        # TODO is noisy false for no noise roads
         if road.is_noisy():
             node_from = get_node_for_point(road.get_start_point(), nodes)
             node_to = get_node_for_point(road.get_end_point(), nodes)
 
-            if off_peak:
-                sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
-                                    "VALUES ({0},{1},{2},{3},{4},{5},{6});".format(
-                    node_from,
-                    node_to,
-                    road.get_average_speed_off_peak(),
-                    road.get_average_speed_off_peak(),
-                    road.get_max_speed_off_peak(),
-                    road.get_light_vehicle_count_off_peak(),
-                    road.get_heavy_vehicle_count_off_peak(),
-                )
-
-            else:
-                sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
-                                    "VALUES ({0},{1},{2},{3},{4},{5},{6});".format(
-                    node_from,
-                    node_to,
-                    road.get_average_speed_on_peak(),
-                    road.get_average_speed_on_peak(),
-                    road.get_max_speed_on_peak(),
-                    road.get_light_vehicle_count_on_peak(),
-                    road.get_heavy_vehicle_count_on_peak(),
-                )
+            sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
+                                "VALUES ({0},{1},{2},{3},{4},{5},{6});".format(
+                node_from,
+                node_to,
+                road.get_average_speed_on_peak(),
+                road.get_average_speed_on_peak(),
+                road.get_max_speed_on_peak(),
+                road.get_light_vehicle_count_on_peak(),
+                road.get_heavy_vehicle_count_on_peak(),
+            )
 
             sql_insert_strings_noisy_roads.append(sql_insert_string)
 

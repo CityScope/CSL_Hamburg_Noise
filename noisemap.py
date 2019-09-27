@@ -6,20 +6,20 @@ import json
 import requests
 import configparser
 
-
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 from simplify_result import simplify_result
 
 try:
     import psycopg2
 except ImportError:
-    print("Did you start the database? Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
+    print(
+        "Did you start the database? Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 
 
 # Feeds the geodatabase with the design data and performs the noise computation
-def execute_scenario(cursor, r_w, d_r, off_peak):
+def execute_scenario(cursor, r_w, d_r):
     # Scenario sample
     # Sending/Receiving geometry data using odbc connection is very slow
     # It is advised to use shape file or other storage format, so use SHPREAD or FILETABLE sql functions
@@ -64,7 +64,7 @@ def execute_scenario(cursor, r_w, d_r, off_peak):
     drop table if exists roads_traffic;
     create table roads_traffic ( node_from INTEGER, node_to INTEGER, load_speed DOUBLE, junction_speed DOUBLE, max_speed DOUBLE, lightVehicleCount DOUBLE, heavyVehicleCount DOUBLE);
     """)
-    traffic_queries = get_traffic_queries(off_peak)
+    traffic_queries = get_traffic_queries()
     for traffic_query in traffic_queries:
         cursor.execute("""{0}""".format(traffic_query))
 
@@ -139,13 +139,13 @@ def execute_scenario(cursor, r_w, d_r, off_peak):
 
     # export result from database to geojson
     time_stamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result_" + str(r_w) + str(d_r) + ".geojson")
+    geojson_path = os.path.abspath(cwd + "/results/" + str(time_stamp) + "_result_" + str(r_w) + str(d_r) + ".geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
 
 
-def compute_noise_propagation(r_w, d_r, off_peak):
+def compute_noise_propagation(r_w, d_r):
     # Define our connection string
     # db name has to be an absolute path
     db_name = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
@@ -181,7 +181,7 @@ def compute_noise_propagation(r_w, d_r, off_peak):
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid3D FOR \"org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation\";")
 
     # perform calculation
-    return execute_scenario(cursor, r_w, d_r, off_peak)
+    return execute_scenario(cursor, r_w, d_r)
 
 
 if __name__ == "__main__":
@@ -196,32 +196,31 @@ if __name__ == "__main__":
     if usage_mode == 'city_scope':
         save_buildings_from_city_scope()
 
-    #road_widths = [1.5, 10]
+    # road_widths = [1.5, 10]
     road_widths = [1.5]
     densification_receivers = [20]
 
-    for off_peak in [True, False]:
-        for road_width in road_widths:
-            for densification_receiver in densification_receivers:
-                # get path to result json
-                result_path = compute_noise_propagation(road_width, densification_receiver, off_peak)
-                # simplify result geometry
-                simplified_result = simplify_result(result_path)
+    for road_width in road_widths:
+        for densification_receiver in densification_receivers:
+            # get path to result json
+            result_path = compute_noise_propagation(road_width, densification_receiver)
+            # simplify result geometry
+            simplified_result = simplify_result(result_path)
 
-                # reproject result to WGS84 coordinate reference system
-                reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
+            # reproject result to WGS84 coordinate reference system
+            reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
 
-                # finally overwrite result json with simplified & reprojected result
-                with open(result_path + str(road_width) + '_' + str(densification_receiver), 'wb') as f:
-                    json.dump(reprojected_result, f)
+            # finally overwrite result json with simplified & reprojected result
+            with open(result_path + str(road_width) + '_' + str(densification_receiver), 'wb') as f:
+                json.dump(reprojected_result, f)
 
-                # Also post result to cityIO
-                if usage_mode == 'city_scope':
-                    post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-                    r = requests.post(post_address, json=reprojected_result)
+            # Also post result to cityIO
+            if usage_mode == 'city_scope':
+                post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
+                r = requests.post(post_address, json=reprojected_result)
 
-                    if not r.status_code == 200:
-                        print("could not post result to cityIO")
-                        print("Error code", r.status_code)
-                    else:
-                        print("Successfully posted to cityIO", r.status_code)
+                if not r.status_code == 200:
+                    print("could not post result to cityIO")
+                    print("Error code", r.status_code)
+                else:
+                    print("Successfully posted to cityIO", r.status_code)

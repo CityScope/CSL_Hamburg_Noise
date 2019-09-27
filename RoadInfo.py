@@ -8,14 +8,10 @@ class RoadInfo:
         self.start_point = start_point
         self.end_point = end_point
         self.geom = geom
-        self.light_vehicle_count_off_peak = traffic_info['light_vehicle_count_off_peak']
-        self.heavy_vehicle_count_off_peak = traffic_info['heavy_vehicle_count_off_peak']
-        self.light_vehicle_count_on_peak = traffic_info['light_vehicle_count_on_peak']
-        self.heavy_vehicle_count_on_peak = traffic_info['heavy_vehicle_count_on_peak']
-        self.average_speed_off_peak = traffic_info['average_speed_off_peak']
-        self.average_speed_on_peak = traffic_info['average_speed_on_peak']
-        self.max_speed_off_peak = traffic_info['max_speed_off_peak']
-        self.max_speed_on_peak = traffic_info['max_speed_on_peak']
+        self.light_vehicle_count = traffic_info['light_vehicle_count']
+        self.heavy_vehicle_count = traffic_info['heavy_vehicle_count']
+        self.average_speed = traffic_info['average_speed']
+        self.max_speed = traffic_info['max_speed']
 
         # defining class methods
 
@@ -43,26 +39,14 @@ class RoadInfo:
     def is_noisy(self):
         return True
 
-    def get_light_vehicle_count_off_peak(self):
-        return self.light_vehicle_count_off_peak
+    def get_light_vehicle_count(self):
+        return self.light_vehicle_count
 
-    def get_heavy_vehicle_count_off_peak(self):
-        return self.heavy_vehicle_count_off_peak
+    def get_heavy_vehicle_count(self):
+        return self.heavy_vehicle_count
 
-    def get_light_vehicle_count_on_peak(self):
-        return self.get_light_vehicle_count_on_peak
+    def get_average_speed(self):
+        return self.average_speed
 
-    def get_heavy_vehicle_count_on_peak(self):
-        return self.heavy_vehicle_count_on_peak
-
-    def get_average_speed_off_peak(self):
-        return self.average_speed_off_peak
-
-    def get_average_speed_on_peak(self):
-        return self.average_speed_on_peak
-
-    def get_max_speed_off_peak(self):
-        return self.max_speed_off_peak
-
-    def get_max_speed_on_peak(self):
-        return self.max_speed_on_peak
+    def get_max_speed(self):
+        return self.max_speed
