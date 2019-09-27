@@ -5,16 +5,16 @@ import os
 import numpy
 from geomet import wkt
 import RoadInfo
-import configparser
+import configparser  #
+from csv_parser import get_road_info_for_road_id
 
 cwd = os.path.dirname(os.path.abspath(__file__))
-
 
 # TODO: all coordinates for roads and buildings are currently set to z level 0
 
 # settings for the static input data
 config = configparser.ConfigParser()
-config.read(cwd+'/config.ini')
+config.read(cwd + '/config.ini')
 
 include_rail_road = config['SETTINGS'].getboolean('INCLUDE_RAILROAD')
 include_lower_main_road = config['SETTINGS'].getboolean('INCLUDE_LOWER_MAIN_ROAD')
@@ -25,10 +25,10 @@ road_network_json = config['SETTINGS']['INPUT_JSON_ROAD_NETWORK']
 buildings_json = config['SETTINGS']['INPUT_JSON_BUILDINGS']
 
 # static input data
-upper_main_road_single_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/upper_main_road_single.json')
-upper_main_road_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/upper_main_road_multi.json')
-main_road_lower_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/lower_main_road_multi.json')
-railroad_multi_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/railroad.json')
+upper_main_road_single_line_json = os.path.abspath(cwd + '/input_geojson/static/roads/upper_main_road_single.json')
+upper_main_road_multi_line_json = os.path.abspath(cwd + '/input_geojson/static/roads/upper_main_road_multi.json')
+main_road_lower_multi_line_json = os.path.abspath(cwd + '/input_geojson/static/roads/lower_main_road_multi.json')
+railroad_multi_line_json = os.path.abspath(cwd + '/input_geojson/static/roads/railroad.json')
 
 # road names from julias shapefile : road_type_ids from IffStar NoiseModdeling
 noise_road_types = {
@@ -53,7 +53,7 @@ def get_road_queries():
     add_third_dimension_to_features(features)
 
     for feature in features:
-        id = feature['properties']['id']
+        fid = feature['properties']['fid']
         road_type = get_road_type(feature['properties'])
         coordinates = feature['geometry']['coordinates']
         # input road type might not be defined. road is not imported # TODO consider using a fallback
@@ -72,7 +72,8 @@ def get_road_queries():
             # build string containing all coordinates
 
         geom = wkt.dumps(feature['geometry'], decimals=0)
-        road_info = RoadInfo.RoadInfo(id, road_type, start_point, end_point, geom)
+        traffic_info_from_csv = get_road_info_for_road_id(fid)
+        road_info = RoadInfo.RoadInfo(fid, road_type, start_point, end_point, geom, traffic_info_from_csv)
         all_roads.append(road_info)
 
     nodes = create_nodes(all_roads)
@@ -85,9 +86,7 @@ def get_road_queries():
 
 
 # returns sql queries for the traffic table,
-# TODO for now creates traffic only for roads of type 56
-# TODO traffic counts are still subjective numbers
-def get_traffic_queries():
+def get_traffic_queries(off_peak=False):
     sql_insert_strings_noisy_roads = []
     nodes = create_nodes(all_roads)
     for road in all_roads:
@@ -95,8 +94,30 @@ def get_traffic_queries():
             node_from = get_node_for_point(road.get_start_point(), nodes)
             node_to = get_node_for_point(road.get_end_point(), nodes)
 
-            sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
-                              "VALUES ({0},{1},33,32,50,200,5);".format(node_from, node_to)
+            if off_peak:
+                sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
+                                    "VALUES ({0},{1},{2},{3},{4},{5},{6});".format(
+                    node_from,
+                    node_to,
+                    road.get_average_speed_off_peak(),
+                    road.get_average_speed_off_peak(),
+                    road.get_max_speed_off_peak(),
+                    road.get_light_vehicle_count_off_peak(),
+                    road.get_heavy_vehicle_count_off_peak(),
+                )
+
+            else:
+                sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
+                                    "VALUES ({0},{1},{2},{3},{4},{5},{6});".format(
+                    node_from,
+                    node_to,
+                    road.get_average_speed_on_peak(),
+                    road.get_average_speed_on_peak(),
+                    road.get_max_speed_on_peak(),
+                    road.get_light_vehicle_count_on_peak(),
+                    road.get_heavy_vehicle_count_on_peak(),
+                )
+
             sql_insert_strings_noisy_roads.append(sql_insert_string)
 
     return sql_insert_strings_noisy_roads
@@ -104,7 +125,7 @@ def get_traffic_queries():
 
 # get sql queries for the buildings
 def get_building_queries():
-    data = open_geojson(cwd +"/"+config['SETTINGS']['INPUT_JSON_BUILDINGS'])
+    data = open_geojson(cwd + "/" + config['SETTINGS']['INPUT_JSON_BUILDINGS'])
     sql_insert_strings_all_buildings = []
 
     for feature in data['features']:
@@ -137,13 +158,13 @@ def get_building_queries():
 # merges the design input for roads and the static road features
 # returns a list of geojson features containing all relevant roads
 def get_roads_features():
-    road_network = open_geojson(cwd+"/"+road_network_json)['features']
+    road_network = open_geojson(cwd + "/" + road_network_json)['features']
     static_features = []
 
     # set source for upper main road
     if upper_main_road_as_multi_line:
         static_features.append(open_geojson(upper_main_road_multi_line_json)['features'])
-    #else:
+    # else:
     #    static_features.append(open_geojson(upper_main_road_single_line_json)['features'])
 
     if include_lower_main_road:
@@ -204,8 +225,9 @@ def get_insert_query_for_road(road, nodes):
     node_to = get_node_for_point(road.get_end_point(), nodes)
 
     sql_insert_string = "INSERT INTO roads_geom (the_geom,NUM,node_from,node_to,road_type) " \
-                      "VALUES (ST_GeomFromText('{0}'),{1},{2},{3},{4});".format(road.get_geom(), road.get_road_id(),
-                                                                              node_from, node_to, road.get_road_type_for_query())
+                        "VALUES (ST_GeomFromText('{0}'),{1},{2},{3},{4});".format(road.get_geom(), road.get_road_id(),
+                                                                                  node_from, node_to,
+                                                                                  road.get_road_type_for_query())
     return sql_insert_string
 
 
