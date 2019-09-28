@@ -32,7 +32,7 @@ def execute_scenario(cursor, r_w, d_r):
     """)
     buildings_queries = get_building_queries()
     for building in buildings_queries:
-        print('building:', building)
+        #print('building:', building)
         # Inserting building into database
         cursor.execute("""
         -- Insert 1 building from automated string

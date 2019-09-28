@@ -53,7 +53,7 @@ def get_road_queries():
     add_third_dimension_to_features(features)
 
     for feature in features:
-        road_id = feature['properties']['road_id']
+        road_id = int(feature['properties']['STREETNUM'])
         road_type = get_road_type(feature['properties'])
         coordinates = feature['geometry']['coordinates']
         # input road type might not be defined. road is not imported # TODO consider using a fallback
@@ -73,6 +73,8 @@ def get_road_queries():
 
         geom = wkt.dumps(feature['geometry'], decimals=0)
         traffic_info_from_csv = get_road_info_for_road_id(road_id)
+        print(road_id, traffic_info_from_csv)
+        #exit()
         road_info = RoadInfo.RoadInfo(road_id, road_type, start_point, end_point, geom, traffic_info_from_csv)
         all_roads.append(road_info)
 
