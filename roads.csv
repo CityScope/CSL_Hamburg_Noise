@@ -2,6 +2,7 @@ Road ID,max_speed,light_vehicle_count,heavy_vehicle_count,average_speed
 10,30,500,0,25
 11,50,1000,100,44
 12,30,250,0,28
+13,50,1000,100,44
 21,30,250,0,28
 22,50,1000,100,44
 23,0,0,2,0
