@@ -101,11 +101,11 @@ def get_traffic_queries():
                                 "VALUES ({0},{1},{2},{3},{4},{5},{6});".format(
                 node_from,
                 node_to,
-                road.get_average_speed_on_peak(),
-                road.get_average_speed_on_peak(),
-                road.get_max_speed_on_peak(),
-                road.get_light_vehicle_count_on_peak(),
-                road.get_heavy_vehicle_count_on_peak(),
+                road.get_average_speed(),
+                road.get_average_speed(),
+                road.get_max_speed(),
+                road.get_light_vehicle_count(),
+                road.get_heavy_vehicle_count(),
             )
 
             sql_insert_strings_noisy_roads.append(sql_insert_string)
