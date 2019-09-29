@@ -6,6 +6,7 @@ import json
 import requests
 import configparser
 
+from result_analyzer import analyze_result
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 from simplify_result import simplify_result
 
@@ -19,7 +20,7 @@ except ImportError:
 
 
 # Feeds the geodatabase with the design data and performs the noise computation
-def execute_scenario(cursor, r_w, d_r):
+def execute_scenario(cursor):
     # Scenario sample
     # Sending/Receiving geometry data using odbc connection is very slow
     # It is advised to use shape file or other storage format, so use SHPREAD or FILETABLE sql functions
@@ -118,7 +119,7 @@ def execute_scenario(cursor, r_w, d_r):
     cursor.execute("""drop table if exists tri_lvl;
     create table tri_lvl as SELECT * from
     BR_TriGrid((select st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',750,50,{0},{1},75,0,0,0.23);
-    """.format(r_w, d_r))
+    """.format(1.5, 2.8))
 
     print("Computation done !")
 
@@ -139,13 +140,13 @@ def execute_scenario(cursor, r_w, d_r):
 
     # export result from database to geojson
     time_stamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    geojson_path = os.path.abspath(cwd + "/results/" + str(time_stamp) + "_result_" + str(r_w) + str(d_r) + ".geojson")
+    geojson_path = os.path.abspath(cwd + "/results/" + str(time_stamp) + ".geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
 
 
-def compute_noise_propagation(r_w, d_r):
+def compute_noise_propagation():
     # Define our connection string
     # db name has to be an absolute path
     db_name = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
@@ -181,7 +182,7 @@ def compute_noise_propagation(r_w, d_r):
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid3D FOR \"org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation\";")
 
     # perform calculation
-    return execute_scenario(cursor, r_w, d_r)
+    return execute_scenario(cursor)
 
 
 if __name__ == "__main__":
@@ -205,11 +206,6 @@ if __name__ == "__main__":
     result_path = compute_noise_propagation()
     # simplify result geometry
     simplified_result = simplify_result(result_path)
-
-
-
-    # reproject result to WGS84 coordinate reference system
-    reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
 
     # finally overwrite result json with simplified & reprojected result
     with open(result_path, 'wb') as f:
