@@ -200,27 +200,28 @@ if __name__ == "__main__":
     road_widths = [1.5]
     densification_receivers = [20]
 
-    for road_width in road_widths:
-        for densification_receiver in densification_receivers:
-            # get path to result json
-            result_path = compute_noise_propagation(road_width, densification_receiver)
-            # simplify result geometry
-            simplified_result = simplify_result(result_path)
 
-            # reproject result to WGS84 coordinate reference system
-            reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
+    # get path to result json
+    result_path = compute_noise_propagation()
+    # simplify result geometry
+    simplified_result = simplify_result(result_path)
 
-            # finally overwrite result json with simplified & reprojected result
-            with open(result_path + str(road_width) + '_' + str(densification_receiver), 'wb') as f:
-                json.dump(reprojected_result, f)
 
-            # Also post result to cityIO
-            if usage_mode == 'city_scope':
-                post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-                r = requests.post(post_address, json=reprojected_result)
 
-                if not r.status_code == 200:
-                    print("could not post result to cityIO")
-                    print("Error code", r.status_code)
-                else:
-                    print("Successfully posted to cityIO", r.status_code)
+    # reproject result to WGS84 coordinate reference system
+    reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
+
+    # finally overwrite result json with simplified & reprojected result
+    with open(result_path, 'wb') as f:
+        json.dump(simplified_result, f)
+
+    # # Also post result to cityIO
+    # if usage_mode == 'city_scope':
+    #     post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
+    #     r = requests.post(post_address, json=reprojected_result)
+    #
+    #     if not r.status_code == 200:
+    #         print("could not post result to cityIO")
+    #         print("Error code", r.status_code)
+    #     else:
+    #         print("Successfully posted to cityIO", r.status_code)
