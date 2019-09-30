@@ -20,6 +20,10 @@ def analyze_result(geojson_path):
         feature_polygon = Polygon(feature['geometry']['coordinates'][0])
         result_areas[feature['properties']['idiso']] += feature_polygon.intersection(get_grasbrook_polygon()).area
 
+    grasbrook_area = get_grasbrook_polygon().area
+    for key, result_area in enumerate(result_areas):
+        result_areas[key] = (result_area / grasbrook_area) * 100
+
     for key, result_area in enumerate(result_areas):
         print('idiso:', key, ' area:', round(result_area))
 
@@ -38,4 +42,4 @@ def get_result_json(result_json_path):
 
 if __name__ == "__main__":
 
-    analyze_result('./results/result2.geojson')
+    analyze_result('./results/result.geojson')
