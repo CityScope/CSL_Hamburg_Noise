@@ -112,14 +112,11 @@ def execute_scenario(cursor):
 
     print("Please wait, sound propagation from sources through buildings..")
 
-    # TODO: change for a test the values for densification receiver
-    # TODO: change for a test the values for street width
-    # TODO - put these in globally available config file
-
+    # wall absorbtion value of 0.5 for green walls
     cursor.execute("""drop table if exists tri_lvl;
     create table tri_lvl as SELECT * from
-    BR_TriGrid((select st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',750,50,{0},{1},75,0,0,0.23);
-    """.format(1.5, 2.8))
+    BR_TriGrid((select st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',750,50,1.5,2.8,75,0,0,0.5);
+    """)
 
     print("Computation done !")
 
