@@ -31,26 +31,24 @@ def execute_scenario(cursor):
     create table buildings ( the_geom GEOMETRY );
     """)
 
-    # TODO : insert all buildings again!
-    #buildings_queries = get_building_queries()
-    building = get_building_queries()[0]
-    #for building in buildings_queries:
-    print('building:', building)
+    buildings_queries = get_building_queries()
+    for building in buildings_queries:
+        print('building:', building)
         # Inserting building into database
-    cursor.execute("""
-    -- Insert 1 building from automated string
-    INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
-    """.format(building))
+        cursor.execute("""
+        -- Insert 1 building from automated string
+        INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
+        """.format(building))
 
-    # Merge buildings that intersect into 1 building
-    cursor.execute("""
-       drop table if exists BUILDINGS_SIMP_MERGE;
-       create table BUILDINGS_SIMP_MERGE as select ST_UNION(ST_SIMPLIFYPRESERVETOPOLOGY(ST_buffer(ST_ACCUM(the_geom),0),0.1)) the_geom from buildings;
-       drop table if exists buildings;
-       -- create table buildings(id serial, the_geom polygon) as select null, the_geom from st_explode('BUILDINGS_SIMP_MERGE');
-       create table buildings(the_geom GEOMETRY) as select the_geom from st_explode('BUILDINGS_SIMP_MERGE');
-       drop table BUILDINGS_SIMP_MERGE;
-       """)
+    # # Merge buildings that intersect into 1 building
+    # cursor.execute("""
+    #    drop table if exists BUILDINGS_SIMP_MERGE;
+    #    create table BUILDINGS_SIMP_MERGE as select ST_UNION(ST_SIMPLIFYPRESERVETOPOLOGY(ST_buffer(ST_ACCUM(the_geom),0),0.1)) the_geom from buildings;
+    #    drop table if exists buildings;
+    #    -- create table buildings(id serial, the_geom polygon) as select null, the_geom from st_explode('BUILDINGS_SIMP_MERGE');
+    #    create table buildings(the_geom GEOMETRY) as select the_geom from st_explode('BUILDINGS_SIMP_MERGE');
+    #    drop table BUILDINGS_SIMP_MERGE;
+    #    """)
 
     print("Make roads table (just geometries and road type)..")
     cursor.execute("""
