@@ -5,6 +5,7 @@ import json
 # read the road info from the csv
 def get_road_info_for_road_id(road_id):
     with open('roads.csv') as csv_file:
+        print("using csv")
         csv_reader = csv.reader(csv_file, delimiter=',')
 
         for row_id, row in enumerate(csv_reader):
