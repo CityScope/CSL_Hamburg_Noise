@@ -17,8 +17,8 @@ except ImportError:
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 
-
 # Feeds the geodatabase with the design data and performs the noise computation
+# Returns the path of the resulting geojson
 def execute_scenario(cursor):
     # Scenario sample
     # Sending/Receiving geometry data using odbc connection is very slow
@@ -39,16 +39,6 @@ def execute_scenario(cursor):
         -- Insert 1 building from automated string
         INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
         """.format(building))
-
-    # # Merge buildings that intersect into 1 building
-    # cursor.execute("""
-    #    drop table if exists BUILDINGS_SIMP_MERGE;
-    #    create table BUILDINGS_SIMP_MERGE as select ST_UNION(ST_SIMPLIFYPRESERVETOPOLOGY(ST_buffer(ST_ACCUM(the_geom),0),0.1)) the_geom from buildings;
-    #    drop table if exists buildings;
-    #    -- create table buildings(id serial, the_geom polygon) as select null, the_geom from st_explode('BUILDINGS_SIMP_MERGE');
-    #    create table buildings(the_geom GEOMETRY) as select the_geom from st_explode('BUILDINGS_SIMP_MERGE');
-    #    drop table BUILDINGS_SIMP_MERGE;
-    #    """)
 
     print("Make roads table (just geometries and road type)..")
     cursor.execute("""
@@ -141,14 +131,19 @@ def execute_scenario(cursor):
 
     # export result from database to geojson
     # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    name = 'simp_' + settings['settings_name']
+    name = 'noise_result'
     geojson_path = os.path.abspath(cwd+"/results/" + str(name) + ".geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
 
 
+# invokes H2GIS functions in the database
+# starts the computation
+# returns the path of the resulting file
 def compute_noise_propagation():
+
+    # TODO: invoke db from subprocess if not running
     # Define our connection string
     # db name has to be an absolute path
     db_name = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
@@ -189,151 +184,29 @@ def compute_noise_propagation():
     return execute_scenario(cursor)
 
 
-def get_noise_result_address():
+def get_result_file_path():
+
+    settings = {
+        'settings_name': 'max triangle area',
+        'max_prop_distance': 750,  # the lower the less accurate
+        'max_wall_seeking_distance': 50,  # the lower  the less accurate
+        'road_with': 1.5,  # the higher the less accurate
+        'receiver_densification': 2.8,  # the higher the less accurate
+        'max_triangle_area': 275,  # the higher the less accurate
+        'sound_reflection_order': 0,  # the higher the less accurate
+        'sound_diffraction_order': 0,  # the higher the less accurate
+        'wall_absorption': 0.23,  # the higher the less accurate
+    }
+
+
     return compute_noise_propagation()
-
-def get_test_settings():
-    test_sets = [
-        {
-            'settings_name': 'standard settings',
-            'max_prop_distance': 750, # the lower the less accurate
-            'max_wall_seeking_distance': 50, # the lower  the less accurate
-            'road_with': 1.5, # the higher the less accurate
-            'receiver_densification': 2.8, # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 0, # the higher the less accurate
-            'sound_diffraction_order': 0, # the higher the less accurate
-            'wall_absorption': 0.23, # the higher the less accurate
-        },
-        {
-            'settings_name': 'very fast',
-            'max_prop_distance': 500, # the lower the less accurate
-            'max_wall_seeking_distance': 25, # the lower  the less accurate
-            'road_with': 15, # the higher the less accurate
-            'receiver_densification': 8.4, # the higher the less accurate
-            'max_triangle_area': 275,  # the higher the less accurate
-            'sound_reflection_order': 0, # the higher the less accurate ##  needs to be natural number?
-            'sound_diffraction_order': 0, # the higher the less accurate
-            'wall_absorption': 0.6, # the higher the less accurate
-        },
-        {
-            'settings_name': 'min wall seeking distance',
-            'max_prop_distance': 750, # the lower the less accurate
-            'max_wall_seeking_distance': 25, # the lower  the less accurate
-            'road_with': 1.5, # the higher the less accurate
-            'receiver_densification': 2.8, # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 0, # the higher the less accurate
-            'sound_diffraction_order': 0, # the higher the less accurate
-            'wall_absorption': 0.23, # the higher the less accurate
-        },
-        {
-            'settings_name': 'min prop distance',
-            'max_prop_distance': 500, # the lower the less accurate
-            'max_wall_seeking_distance': 50, # the lower  the less accurate
-            'road_with': 1.5, # the higher the less accurate
-            'receiver_densification': 2.8, # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 0, # the higher the less accurate
-            'sound_diffraction_order': 0, # the higher the less accurate
-            'wall_absorption': 0.23, # the higher the less accurate
-        },
-        {
-            'settings_name': 'max triangle area',
-            'max_prop_distance': 750,  # the lower the less accurate
-            'max_wall_seeking_distance': 50,  # the lower  the less accurate
-            'road_with': 1.5,  # the higher the less accurate
-            'receiver_densification': 2.8,  # the higher the less accurate
-            'max_triangle_area': 275,  # the higher the less accurate
-            'sound_reflection_order': 0,  # the higher the less accurate
-            'sound_diffraction_order': 0,  # the higher the less accurate
-            'wall_absorption': 0.23,  # the higher the less accurate
-        },
-        {
-            'settings_name': 'max road with',
-            'max_prop_distance': 750,  # the lower the less accurate
-            'max_wall_seeking_distance': 50,  # the lower  the less accurate
-            'road_with': 15,  # the higher the less accurate
-            'receiver_densification': 2.8,  # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 0,  # the higher the less accurate
-            'sound_diffraction_order': 0,  # the higher the less accurate
-            'wall_absorption': 0.23,  # the higher the less accurate
-        },
-        {
-            'settings_name': 'max wall absorption',
-            'max_prop_distance': 750,  # the lower the less accurate
-            'max_wall_seeking_distance': 50,  # the lower  the less accurate
-            'road_with': 1.5,  # the higher the less accurate
-            'receiver_densification': 2.8,  # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 0,  # the higher the less accurate
-            'sound_diffraction_order': 0,  # the higher the less accurate
-            'wall_absorption': 0.6,  # the higher the less accurate
-        }, {
-            'settings_name': 'change sound reflection order',
-            'max_prop_distance': 750,  # the lower the less accurate
-            'max_wall_seeking_distance': 50,  # the lower  the less accurate
-            'road_with': 1.5,  # the higher the less accurate
-            'receiver_densification': 2.8,  # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 2,  # the higher the less accurate
-            'sound_diffraction_order': 0,  # the higher the less accurate
-            'wall_absorption': 0.23,  # the higher the less accurate
-        }, {
-            'settings_name': 'change sound diffraction order',
-            'max_prop_distance': 750,  # the lower the less accurate
-            'max_wall_seeking_distance': 50,  # the lower  the less accurate
-            'road_with': 1.5,  # the higher the less accurate
-            'receiver_densification': 2.8,  # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 0,  # the higher the less accurate
-            'sound_diffraction_order': 1,  # the higher the less accurate
-            'wall_absorption': 0.23,  # the higher the less accurate
-        }, {
-            'settings_name': 'change sound reflection & diffraction order',
-            'max_prop_distance': 750,  # the lower the less accurate
-            'max_wall_seeking_distance': 50,  # the lower  the less accurate
-            'road_with': 1.5,  # the higher the less accurate
-            'receiver_densification': 2.8,  # the higher the less accurate
-            'max_triangle_area': 75,  # the higher the less accurate
-            'sound_reflection_order': 2,  # the higher the less accurate
-            'sound_diffraction_order': 1,  # the higher the less accurate
-            'wall_absorption': 0.23,  # the higher the less accurate
-        },
-    ]
-
-    return test_sets
 
 
 if __name__ == "__main__":
-    import time
-    # create tests sets
-    # log computation time and result time (identify result)
+    get_result_file_path()
 
-    # todo : try adjusting
-    # https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
-    # todo : try shifting to GB center
-    # https: // github.com / Ifsttar / NoiseModelling / blob / master / noisemap - core / src / main / java / org / orbisgis / noisemap / core / jdbc / JdbcNoiseMap.java  # L68
-    # todo: merge buildings that are conecting
+    # Try to make noise computation even faster
+    # by adjustiong: https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
+    # by shifting to GB center
+    #   https: // github.com / Ifsttar / NoiseModelling / blob / master / noisemap - core / src / main / java / org / orbisgis / noisemap / core / jdbc / JdbcNoiseMap.java  # L68
 
-
-
-    durations = {}
-
-    for setting in get_test_settings():
-        settings = setting
-        print(settings['settings_name'])
-        start_time = time.time()
-        compute_noise_propagation()
-        print("****** calc completed *******")
-        duration = time.time() - start_time
-        durations.update({settings['settings_name']: duration})
-        file = open('times_log.txt', 'a')
-        file.write('\n')
-        file.write(settings['settings_name'] + ': ' + str(duration) + '\n')
-        file.write('\n')
-        file.close()
-        print(durations)
-
-    print(durations)
