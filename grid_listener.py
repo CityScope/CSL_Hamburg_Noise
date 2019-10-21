@@ -6,7 +6,7 @@ import os
 import json
 import time
 import requests
-from noisemap import get_noise_result_address
+from noisemap import get_result_file_path
 from parse_city_scope_table import save_buildings_from_city_scope
 
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         if grid_has_changed:
             # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
             save_buildings_from_city_scope()
-            noise_result_address = get_noise_result_address()
+            noise_result_address = get_result_file_path()
 
             # Also post result to cityIO
             print("trying to post to cityIO")
@@ -55,8 +55,3 @@ if __name__ == "__main__":
             time.sleep(1)
 
 
-# todo
-# token_file = f = open("access_token.txt", "r")
-# token = f.read()
-#
-# url = https: // cityio.media.mit.edu / api / table / hidden_table
