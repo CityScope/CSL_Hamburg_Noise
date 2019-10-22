@@ -8,6 +8,7 @@ import time
 import requests
 from noisemap import get_result_file_path
 from parse_city_scope_table import save_buildings_from_city_scope
+from config_loader import get_config
 
 
 # check if grid data changed
@@ -23,33 +24,35 @@ def check_for_grid_changes(table_url, last_id):
     return grid_changed, hash_id
 
 
+# checks for updates on the cityIO grid
+# If the grid changes the city-scope parser is called to create a new buildings.json
+# The noise calculation is triggered
 if __name__ == "__main__":
-    cwd = os.path.dirname(os.path.abspath(__file__))
-
-    # settings for the static input data
-    config = configparser.ConfigParser()
-    config.read(cwd+'/config.ini')
+    config = get_config()
 
     result_post_url = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
 
     last_table_id = 0
+
     while True:
         grid_has_changed, last_table_id = check_for_grid_changes(config['CITY_SCOPE']['TABLE_URL_INPUT'], last_table_id)
         if grid_has_changed:
             # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
             save_buildings_from_city_scope()
+            # start noise calculation
             noise_result_address = get_result_file_path()
 
-            # Also post result to cityIO
-            print("trying to post to cityIO")
-            post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-            r = requests.post(post_address, json=noise_result_address)
+            with open(noise_result_address) as f:
+                # Also post result to cityIO
+                print("trying to post to cityIO")
+                post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
+                r = requests.post(post_address, json=json.load(f))
 
-            if not r.status_code == 200:
-                print("could not post result to cityIO")
-                print("Error code", r.status_code)
-            else:
-                print("Successfully posted to cityIO", r.status_code)
+                if not r.status_code == 200:
+                    print("could not post result to cityIO")
+                    print("Error code", r.status_code)
+                else:
+                    print("Successfully posted to cityIO", r.status_code)
         else:
             print("No changes in grid")
             time.sleep(1)

@@ -6,3 +6,10 @@ psycopg2
 numpy
 requests
 configparser
+pyproj
+requests
+urllib3
+aenum
+certifi
+chardet
+idna

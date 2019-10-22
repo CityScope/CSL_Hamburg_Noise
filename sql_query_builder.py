@@ -5,7 +5,7 @@ import os
 import numpy
 from geomet import wkt
 import RoadInfo
-import configparser
+from config_loader import get_config
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,16 +13,15 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 # TODO: all coordinates for roads and buildings are currently set to z level 0
 
 # settings for the static input data
-config = configparser.ConfigParser()
-config.read(cwd+'/config.ini')
+config = get_config()
 
-include_rail_road = config['SETTINGS'].getboolean('INCLUDE_RAILROAD')
-include_lower_main_road = config['SETTINGS'].getboolean('INCLUDE_LOWER_MAIN_ROAD')
-upper_main_road_as_multi_line = config['SETTINGS'].getboolean('UPPER_MAIN_ROAD_AS_MULTI_LINE')
+include_rail_road = config['NOISE_SETTINGS'].getboolean('INCLUDE_RAILROAD')
+include_lower_main_road = config['NOISE_SETTINGS'].getboolean('INCLUDE_LOWER_MAIN_ROAD')
+upper_main_road_as_multi_line = config['NOISE_SETTINGS'].getboolean('UPPER_MAIN_ROAD_AS_MULTI_LINE')
 
 # dynamic input data from designer
-road_network_json = config['SETTINGS']['INPUT_JSON_ROAD_NETWORK']
-buildings_json = config['SETTINGS']['INPUT_JSON_BUILDINGS']
+road_network_json = config['NOISE_SETTINGS']['INPUT_JSON_ROAD_NETWORK']
+buildings_json = config['NOISE_SETTINGS']['INPUT_JSON_BUILDINGS']
 
 # static input data
 upper_main_road_single_line_json = os.path.abspath(cwd+'/input_geojson/static/roads/upper_main_road_single.json')
@@ -105,7 +104,7 @@ def get_traffic_queries():
 # get sql queries for the buildings
 def get_building_queries():
     # A multipolygon containing all buildings
-    data = open_geojson(cwd +"/"+config['SETTINGS']['INPUT_JSON_BUILDINGS_SIMPLE'])
+    data = open_geojson(cwd +"/"+config['NOISE_SETTINGS']['INPUT_JSON_BUILDINGS'])
     sql_insert_strings_all_buildings = []
 
     for feature in data['features']:

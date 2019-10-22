@@ -11,6 +11,21 @@ except ImportError:
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 
+
+# Returns computation settings
+def get_settings():
+    return {
+        'settings_name': 'max triangle area',
+        'max_prop_distance': 750,  # the lower the less accurate
+        'max_wall_seeking_distance': 50,  # the lower  the less accurate
+        'road_with': 1.5,  # the higher the less accurate
+        'receiver_densification': 2.8,  # the higher the less accurate
+        'max_triangle_area': 275,  # the higher the less accurate
+        'sound_reflection_order': 0,  # the higher the less accurate
+        'sound_diffraction_order': 0,  # the higher the less accurate
+        'wall_absorption': 0.23,  # the higher the less accurate
+    }
+
 # Feeds the geodatabase with the design data and performs the noise computation
 # Returns the path of the resulting geojson
 def execute_scenario(cursor):
@@ -99,7 +114,7 @@ def execute_scenario(cursor):
     cursor.execute("""drop table if exists tri_lvl; create table tri_lvl as SELECT * from BR_TriGrid((select 
     st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',
     {max_prop_distance},{max_wall_seeking_distance},{road_with},{receiver_densification},{max_triangle_area},
-    {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(**settings))
+    {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(**get_settings()))
 
     print("Computation done !")
 
@@ -179,20 +194,6 @@ def compute_noise_propagation():
 
 
 def get_result_file_path():
-
-    settings = {
-        'settings_name': 'max triangle area',
-        'max_prop_distance': 750,  # the lower the less accurate
-        'max_wall_seeking_distance': 50,  # the lower  the less accurate
-        'road_with': 1.5,  # the higher the less accurate
-        'receiver_densification': 2.8,  # the higher the less accurate
-        'max_triangle_area': 275,  # the higher the less accurate
-        'sound_reflection_order': 0,  # the higher the less accurate
-        'sound_diffraction_order': 0,  # the higher the less accurate
-        'wall_absorption': 0.23,  # the higher the less accurate
-    }
-
-
     return compute_noise_propagation()
 
 
