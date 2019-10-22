@@ -42,6 +42,7 @@ def create_buildings_json(table, grid_of_cells):
 
     return geo_json
 
+# merges adjacent buildings and creates a multipolygon containing all buildings
 def merge_adjacent_buildings(geo_json):
     polygons = []
     for feature in geo_json['features']:
@@ -56,8 +57,6 @@ def merge_adjacent_buildings(geo_json):
             }
         ]
     }
-
-
 
 
 # collects the data from city io, transforms into a geojson and saves that geojson as input for the noise calculation

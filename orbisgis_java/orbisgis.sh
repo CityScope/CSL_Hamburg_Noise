@@ -37,6 +37,7 @@
 #
 
 # Total memory in KB
+# TODO Try adjusting memory!!
 totalMemKB=$(awk '/MemTotal:/ { print $2 }' /proc/meminfo)
 
 # If unable to retrieve the memory, run orbisgis with 1024M

@@ -1,19 +1,13 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 import os
-from datetime import datetime
-import json
-import requests
-import configparser
-
 
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
-from simplify_result import simplify_result
 
 try:
     import psycopg2
 except ImportError:
-    print("Did you start the database? Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
+    print("Did you start the database? Go to /orbisgis_java and Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 
