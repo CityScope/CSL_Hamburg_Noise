@@ -142,7 +142,7 @@ def save_buildings_from_city_scope():
     geo_json_merged = merge_adjacent_buildings(geo_json)
 
     # save geojson
-    with open('../' + config['NOISE_SETTINGS']['INPUT_JSON_BUILDINGS'], 'wb') as f:
+    with open(config['NOISE_SETTINGS']['INPUT_JSON_BUILDINGS'], 'wb') as f:
         json.dump(geo_json_merged, f)
 
 
