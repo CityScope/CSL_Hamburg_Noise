@@ -4,7 +4,7 @@ import urllib
 import json
 import time
 import requests
-from noisemap import get_result_file_path
+from noisemap import perform_noise_calculation
 from city_scope.parse_city_scope_table import save_buildings_from_city_scope
 from config_loader import get_config
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
             # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
             save_buildings_from_city_scope()
             # start noise calculation
-            noise_result_address = get_result_file_path()
+            noise_result_address = perform_noise_calculation()
 
             with open(noise_result_address) as f:
                 # Also post result to cityIO
@@ -53,6 +53,6 @@ if __name__ == "__main__":
                     print("Successfully posted to cityIO", r.status_code)
         else:
             print("No changes in grid")
-            time.sleep(1)
+            time.sleep(10)
 
 

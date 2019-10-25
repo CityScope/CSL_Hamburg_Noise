@@ -193,12 +193,12 @@ def compute_noise_propagation():
     return execute_scenario(cursor)
 
 
-def get_result_file_path():
+def perform_noise_calculation():
     return compute_noise_propagation()
 
 
 if __name__ == "__main__":
-    get_result_file_path()
+    perform_noise_calculation()
 
     # Try to make noise computation even faster
     # by adjustiong: https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
