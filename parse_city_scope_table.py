@@ -3,6 +3,8 @@
 from city_io_to_geojson import city_io_to_geojson, CityScopeTable
 import json
 import configparser
+from shapely.geometry import Polygon, mapping
+from shapely.ops import cascaded_union
 
 
 def create_buildings_json(table, grid_of_cells):
@@ -40,6 +42,23 @@ def create_buildings_json(table, grid_of_cells):
 
     return geo_json
 
+def merge_adjacent_buildings(geo_json):
+    polygons = []
+    for feature in geo_json['features']:
+        polygons.append(Polygon(feature['geometry']['coordinates'][0]))
+
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "geometry": mapping(cascaded_union(polygons)),
+                "properties": {}
+            }
+        ]
+    }
+
+
+
 
 # collects the data from city io, transforms into a geojson and saves that geojson as input for the noise calculation
 def save_buildings_from_city_scope():
@@ -54,7 +73,15 @@ def save_buildings_from_city_scope():
     table = CityScopeTable.CityScopeTable(city_scope_address, table_flipped)
     grid_of_cells = city_io_to_geojson.create_grid_of_cells(table)
     geo_json = create_buildings_json(table, grid_of_cells)
+    geo_json_simple = merge_adjacent_buildings(geo_json)
+
 
     # save geojson
     with open(config['SETTINGS']['INPUT_JSON_BUILDINGS'], 'wb') as f:
         json.dump(geo_json, f)
+# save geojson
+    with open(config['SETTINGS']['INPUT_JSON_BUILDINGS_SIMPLE'], 'wb') as f:
+        json.dump(geo_json_simple, f)
+
+
+save_buildings_from_city_scope()

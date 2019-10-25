@@ -104,26 +104,34 @@ def get_traffic_queries():
 
 # get sql queries for the buildings
 def get_building_queries():
-    data = open_geojson(cwd +"/"+config['SETTINGS']['INPUT_JSON_BUILDINGS'])
+    # A multipolygon containing all buildings
+    data = open_geojson(cwd +"/"+config['SETTINGS']['INPUT_JSON_BUILDINGS_SIMPLE'])
     sql_insert_strings_all_buildings = []
 
     for feature in data['features']:
-        building_coordinates = ''
-        try:
-            for coordinates in feature['geometry']['coordinates']:
-                for coordinate in coordinates:
-                    coordinate_string = str(coordinate[0]) + ' ' + str(coordinate[1]) + ' ' + str(0) + ','
-                    building_coordinates += coordinate_string
-            # remove trailing comma of last coordinate
-            building_coordinates = building_coordinates[:-1]
-            # build string for SQL query
-            sql_insert_string = "'MULTIPOLYGON (((" + building_coordinates + ")))'"
-
+        for polygon in feature['geometry']['coordinates']:
+            polygon_string = ''
+            line_string_coordinates = ''
+            for coordinates_list in polygon:
+                try:
+                    for coordinate_pair in coordinates_list:
+                        # append 0 to all coordinates for mock third dimension
+                        coordinate_string = str(coordinate_pair[0]) + ' ' + str(coordinate_pair[1]) + ' ' + str(0) + ','
+                        line_string_coordinates += coordinate_string
+                        # remove trailing comma of last coordinate
+                    line_string_coordinates = line_string_coordinates[:-1]
+                except Exception as e:
+                    print("invalid json")
+                    print(e)
+                    print(feature)
+                    exit()
+            # create a string containing a list of coordinates lists per linestring
+            #   ('PolygonWithHole', 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(1 1, 1 2, 2 2, 2 1, 1 1))'),
+                polygon_string += '(' + line_string_coordinates + '),'
+            # remove trailing comma of last line string
+            polygon_string = polygon_string[:-1]
+            sql_insert_string = "'POLYGON (" + polygon_string + ")'"
             sql_insert_strings_all_buildings.append(sql_insert_string)
-        except:
-            print("invalid json")
-            print(feature)
-            exit()
 
     return sql_insert_strings_all_buildings
 

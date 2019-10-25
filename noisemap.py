@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 import os
-import datetime
+from datetime import datetime
 import json
 import requests
 import configparser
@@ -17,8 +17,8 @@ except ImportError:
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 
-
 # Feeds the geodatabase with the design data and performs the noise computation
+# Returns the path of the resulting geojson
 def execute_scenario(cursor):
     # Scenario sample
     # Sending/Receiving geometry data using odbc connection is very slow
@@ -30,6 +30,7 @@ def execute_scenario(cursor):
     drop table if exists buildings;
     create table buildings ( the_geom GEOMETRY );
     """)
+
     buildings_queries = get_building_queries()
     for building in buildings_queries:
         print('building:', building)
@@ -37,17 +38,7 @@ def execute_scenario(cursor):
         cursor.execute("""
         -- Insert 1 building from automated string
         INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
-             """.format(building))
-
-    # Merge buildings that intersect into 1 building
-    cursor.execute("""
-       drop table if exists BUILDINGS_SIMP_MERGE;
-       create table BUILDINGS_SIMP_MERGE as select ST_UNION(ST_SIMPLIFYPRESERVETOPOLOGY(ST_buffer(ST_ACCUM(the_geom),0),0.1)) the_geom from buildings;
-       drop table if exists buildings;
-       -- create table buildings(id serial, the_geom polygon) as select null, the_geom from st_explode('BUILDINGS_SIMP_MERGE');
-       create table buildings(the_geom GEOMETRY) as select the_geom from st_explode('BUILDINGS_SIMP_MERGE');
-       drop table BUILDINGS_SIMP_MERGE;
-       """)
+        """.format(building))
 
     print("Make roads table (just geometries and road type)..")
     cursor.execute("""
@@ -111,37 +102,48 @@ def execute_scenario(cursor):
 
     print("Please wait, sound propagation from sources through buildings..")
 
-    cursor.execute("""drop table if exists tri_lvl;
-    create table tri_lvl as SELECT * from
-    BR_TriGrid((select st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',750,50,1.5,2.8,75,0,0,0.23);
-    """)
+    cursor.execute("""drop table if exists tri_lvl; create table tri_lvl as SELECT * from BR_TriGrid((select 
+    st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',
+    {max_prop_distance},{max_wall_seeking_distance},{road_with},{receiver_densification},{max_triangle_area},
+    {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(**settings))
 
     print("Computation done !")
 
-    print("Create isocountour and save it as a shapefile in the working folder..")
+    print("Create isocountour and save it as a geojson in the working folder..")
 
     cursor.execute("""
     drop table if exists tricontouring_noise_map;
+    -- create table tricontouring_noise_map AS SELECT * from ST_SimplifyPreserveTopology(ST_TriangleContouring('tri_lvl','w_v1','w_v2','w_v3',31622, 100000, 316227, 1000000, 3162277, 1e+7, 31622776, 1e+20));
     create table tricontouring_noise_map AS SELECT * from ST_TriangleContouring('tri_lvl','w_v1','w_v2','w_v3',31622, 100000, 316227, 1000000, 3162277, 1e+7, 31622776, 1e+20);
     -- Merge adjacent triangle into polygons (multiple polygon by row, for unique isoLevel and cellId key)
     drop table if exists multipolygon_iso;
     create table multipolygon_iso as select ST_UNION(ST_ACCUM(the_geom)) the_geom ,idiso, CELL_ID from tricontouring_noise_map GROUP BY IDISO, CELL_ID;
     -- Explode each row to keep only a polygon by row
+    drop table if exists simple_noise_map;
+    -- example form internet : CREATE TABLE roads2 AS SELECT id_way, ST_PRECISIONREDUCER(ST_SIMPLIFYPRESERVETOPOLOGY(THE_GEOM),0.1),1) the_geom, highway_type t FROM roads; 
+    -- ST_SimplifyPreserveTopology(geometry geomA, float tolerance);
+    create table simple_noise_map as select ST_SIMPLIFYPRESERVETOPOLOGY(the_geom, 2) the_geom, idiso, CELL_ID from multipolygon_iso;
     drop table if exists contouring_noise_map;
-    create table contouring_noise_map as select the_geom,idiso, CELL_ID from ST_Explode('multipolygon_iso');
-    drop table multipolygon_iso;""")
+    create table CONTOURING_NOISE_MAP as select the_geom,idiso, CELL_ID from ST_Explode('simple_noise_map'); 
+    drop table simple_noise_map; drop table multipolygon_iso;""")
 
     cwd = os.path.dirname(os.path.abspath(__file__))
 
     # export result from database to geojson
-    time_stamp = str(datetime.datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    geojson_path = os.path.abspath(cwd+"/results/" + str(time_stamp) + "_result.geojson")
+    # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
+    name = 'noise_result'
+    geojson_path = os.path.abspath(cwd+"/results/" + str(name) + ".geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
 
 
+# invokes H2GIS functions in the database
+# starts the computation
+# returns the path of the resulting file
 def compute_noise_propagation():
+
+    # TODO: invoke db from subprocess if not running
     # Define our connection string
     # db name has to be an absolute path
     db_name = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
@@ -161,6 +163,8 @@ def compute_noise_propagation():
     cursor.execute("CREATE ALIAS IF NOT EXISTS H2GIS_SPATIAL FOR \"org.h2gis.functions.factory.H2GISFunctions.load\";")
     cursor.execute("CALL H2GIS_SPATIAL();")
 
+    # TODO To make faster : not necesscary to initate every time??
+    # TODO : call "execute scenario" from grid listener?=
     # Init NoiseModelling functions
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_PtGrid3D FOR \"org.orbisgis.noisemap.h2.BR_PtGrid3D.noisePropagation\";")
@@ -180,37 +184,29 @@ def compute_noise_propagation():
     return execute_scenario(cursor)
 
 
+def get_result_file_path():
+
+    settings = {
+        'settings_name': 'max triangle area',
+        'max_prop_distance': 750,  # the lower the less accurate
+        'max_wall_seeking_distance': 50,  # the lower  the less accurate
+        'road_with': 1.5,  # the higher the less accurate
+        'receiver_densification': 2.8,  # the higher the less accurate
+        'max_triangle_area': 275,  # the higher the less accurate
+        'sound_reflection_order': 0,  # the higher the less accurate
+        'sound_diffraction_order': 0,  # the higher the less accurate
+        'wall_absorption': 0.23,  # the higher the less accurate
+    }
+
+
+    return compute_noise_propagation()
+
+
 if __name__ == "__main__":
-    from parse_city_scope_table import save_buildings_from_city_scope
-    from city_io_to_geojson import reproject
+    get_result_file_path()
 
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    usage_mode = config['SETTINGS']['USAGE_MODE']
+    # Try to make noise computation even faster
+    # by adjustiong: https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
+    # by shifting to GB center
+    #   https: // github.com / Ifsttar / NoiseModelling / blob / master / noisemap - core / src / main / java / org / orbisgis / noisemap / core / jdbc / JdbcNoiseMap.java  # L68
 
-    # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
-    if usage_mode == 'city_scope':
-        save_buildings_from_city_scope()
-
-    # get path to result json
-    result_path = compute_noise_propagation()
-    # simplify result geometry
-    simplified_result = simplify_result(result_path)
-
-    # reproject result to WGS84 coordinate reference system
-    reprojected_result = reproject.reproject_geojson_local_to_global(simplified_result)
-
-    # finally overwrite result json with simplified & reprojected result
-    with open(result_path, 'wb') as f:
-        json.dump(reprojected_result, f)
-
-    # Also post result to cityIO
-    if usage_mode == 'city_scope':
-        post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-        r = requests.post(post_address, json=reprojected_result)
-
-        if not r.status_code == 200:
-            print("could not post result to cityIO")
-            print("Error code", r.status_code)
-        else:
-            print("Successfully posted to cityIO", r.status_code)

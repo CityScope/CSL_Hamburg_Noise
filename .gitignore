@@ -8,6 +8,7 @@
 
 # Andres personal project log file
 project_log_andre
+access_token.txt
 
 #Calculation result shapefiles
 results/*
