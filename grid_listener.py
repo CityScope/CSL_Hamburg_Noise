@@ -41,10 +41,13 @@ if __name__ == "__main__":
             noise_result_address = perform_noise_calculation()
 
             with open(noise_result_address) as f:
+                resultdata = json.load(f)
+                resultdata["grid_hash"] = last_table_id # state of grid, the results are based on
+
                 # Also post result to cityIO
                 print("trying to post to cityIO")
                 post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
-                r = requests.post(post_address, json=json.load(f))
+                r = requests.post(post_address, json=resultdata)
 
                 if not r.status_code == 200:
                     print("could not post result to cityIO")
