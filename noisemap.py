@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
+from config_loader import get_config
 
 try:
     import psycopg2
@@ -133,8 +134,8 @@ def execute_scenario(cursor):
     -- ST_SimplifyPreserveTopology(geometry geomA, float tolerance);
     create table simple_noise_map as select ST_SIMPLIFYPRESERVETOPOLOGY(the_geom, 2) the_geom, idiso, CELL_ID from multipolygon_iso;
     drop table if exists contouring_noise_map;
-    create table CONTOURING_NOISE_MAP as select the_geom,idiso, CELL_ID from ST_Explode('simple_noise_map'); 
-    drop table simple_noise_map; drop table multipolygon_iso;""")
+    create table CONTOURING_NOISE_MAP as select ST_Transform(ST_SETSRID(the_geom,{0}),{1}),idiso, CELL_ID from ST_Explode('simple_noise_map'); 
+    drop table simple_noise_map; drop table multipolygon_iso;""".format(get_config()['CITY_SCOPE']['LOCAL_EPSG'],get_config()['CITY_SCOPE']['OUTPUT_EPSG']))
 
     cwd = os.path.dirname(os.path.abspath(__file__))
 

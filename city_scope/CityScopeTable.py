@@ -13,8 +13,8 @@ import pyproj
 
 # reprojects a point
 def reproject_point(current_epsg, new_epsg, point):
-    current = pyproj.Proj("+init=" + current_epsg)
-    new = pyproj.Proj("+init=" + new_epsg)
+    current = pyproj.Proj("+init=epsg:" + current_epsg)
+    new = pyproj.Proj("+init=epsg:" + new_epsg)
     projected_x, projected_y = pyproj.transform(current, new, point[0], point[1])
 
     return projected_x, projected_y
