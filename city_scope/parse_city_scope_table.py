@@ -21,8 +21,8 @@ def create_grid_of_cells(table):
         for column in range(table.get_table_column_count()):
             cell_id = row * table.get_table_column_count() + column
             cell_content = table.get_result()['grid'][cell_id]
-            cell_type = cell_content[0]
-            cell_rotation = cell_content[1]
+            cell_type = cell_content[table.table_cell_content.index("type")]
+            cell_rotation = cell_content[table.table_cell_content.index("rotation")]
 
             # get coordinates of the current cell's origin
             if (row == 0 and column == 0):
@@ -85,8 +85,7 @@ def create_buildings_json(table, grid_of_cells):
     buildings_id = 0
     for cell in grid_of_cells:
         # filter out empty or irrelevant cells
-        #if not table.get_table_mapping()[str(cell.get_cell_type())] in ['ROAD', 'unknown', '']:
-        if not table.get_table_mapping()[cell.get_cell_type()] in ['street', 'unknown', '']:
+        if table.get_table_mapping()[cell.get_cell_type()]["type"] == "building":
             coordinates = []
             for point in get_cell_polygon_coord(cell):
                 coordinates.append(point)

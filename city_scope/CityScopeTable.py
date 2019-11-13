@@ -43,6 +43,7 @@ class CityScopeTable:
         self.table_row_count = self.result['header']['spatial']['nrows']
         self.table_column_count = self.result['header']['spatial']['ncols']
         self.table_mapping = self.result['header']['mapping']['type']
+        self.table_cell_content = self.result['header']['block']
         # todo enter mapping to get street id
 
         # get projections from config.ini
