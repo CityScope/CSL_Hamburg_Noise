@@ -85,6 +85,7 @@ def create_buildings_json(table, grid_of_cells):
     buildings_id = 0
     for cell in grid_of_cells:
         # filter out empty or irrelevant cells
+        if not "type" in table.get_table_mapping()[cell.get_cell_type()]: continue
         if table.get_table_mapping()[cell.get_cell_type()]["type"] == "building":
             coordinates = []
             for point in get_cell_polygon_coord(cell):
