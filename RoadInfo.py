@@ -3,11 +3,14 @@
 # TODO make getter for road type specific traffic data etc
 class RoadInfo:
     # defining constructor
-    def __init__(self, road_id, road_type, start_point, end_point, geom):
+    def __init__(self, road_id, road_type, start_point, end_point, max_speed, car_traffic, truck_traffic, geom):
         self.road_id = road_id
         self.road_type = road_type
         self.start_point = start_point
         self.end_point = end_point
+        self.max_speed = max_speed
+        self.car_traffic = car_traffic
+        self.truck_traffic = truck_traffic
         self.geom = geom
 
         # defining class methods
@@ -33,8 +36,11 @@ class RoadInfo:
     def get_geom(self):
         return (self.geom)
 
-    def is_noisy(self):
-        if self.get_road_type_for_query() == 56:
-            return True
+    def get_max_speed(self):
+        return (self.max_speed)
 
-        return False
+    def get_car_traffic(self):
+        return self.car_traffic
+
+    def get_truck_traffic(self):
+        return self.truck_traffic
