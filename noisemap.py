@@ -82,12 +82,24 @@ def execute_scenario(cursor):
 
     print("Compute the sound level for each segment of roads..")
 
+
+    # todo ADD railroad as a road with tram traffic. using BTW_EvalSource for the rail_road
+    # https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-h2/src/main/java/org/orbisgis/noisemap/h2/BTW_EvalSource.java
+    #
+    # Insert statement for rail - hardcoded
+
+    # todo railroad_geom = wkt.dumps(feature['geometry'], decimals=0) of railroad?
+    # todo make fucntino get railroad features (geom , speed, ...) in query builder
+
     cursor.execute("""
     drop table if exists roads_src_global;
-    CREATE TABLE roads_src_global AS SELECT the_geom,BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False) as db_m from roads_geo_and_traffic;""")
+    CREATE TABLE roads_src_global AS SELECT the_geom,BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False) as db_m from roads_geo_and_traffic;
+    INSERT INTO roads_src_global AS SELECT the_geom, BTW_EvalSource(double speed, double tw_per_hour, int groundType, boolean has_anti_vibration)
+    """)
 
     print("Apply frequency repartition of road noise level..")
 
+    # TODO BR_Spect and BTW_spec seems to be identical
     cursor.execute("""
     drop table if exists roads_src;
     CREATE TABLE roads_src AS SELECT the_geom,
