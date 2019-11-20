@@ -128,8 +128,8 @@ def get_building_queries():
     for feature in data['features']:
         for polygon in feature['geometry']['coordinates']:
             polygon_string = ''
-            line_string_coordinates = ''
             for coordinates_list in polygon:
+                line_string_coordinates = ''
                 try:
                     for coordinate_pair in coordinates_list:
                         # append 0 to all coordinates for mock third dimension
