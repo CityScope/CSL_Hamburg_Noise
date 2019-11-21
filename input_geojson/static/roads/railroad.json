@@ -32,7 +32,11 @@
         "hauptsaml": 0,
         "anlieger": 0,
         "id": 101,
-        "name": "eisenbahn"
+        "name": "eisenbahn",
+        "train_speed":  100,
+        "trains_per_day": 280021,
+        "ground_type": 1,
+        "has_anti_vibration": false
       },
       "id": 0
     }

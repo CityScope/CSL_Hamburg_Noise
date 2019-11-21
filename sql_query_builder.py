@@ -42,9 +42,18 @@ def open_geojson(path):
         return json.load(f)
 
 
+# TODO get more railroads?
+def get_railroad_geom():
+    railroad_json = open_geojson(railroad_multi_line_json)
+
+    geom = wkt.dumps(railroad_json['features'][0]['geometry'], decimals=0)
+
+    return geom
+
+
 # extract traffic data from road properties
-def get_traffic_data(road_properties):
-    #  https: // d - nb.info / 97917323
+def get_car_traffic_data(road_properties):
+    #  https://d-nb.info/97917323X/34
     # p. 68, assuming a mix of type a) and type b) for car traffic around grasbrook (strong morning peak)
     # most roads in hamburg belong to type a) or b)
     # assuming percentage of daily traffic in peak hour = 11%
@@ -53,11 +62,26 @@ def get_traffic_data(road_properties):
 
     # Sources daily traffic: HafenCity GmbH , Standortanalyse, S. 120
 
+    if road_properties['eisenbahn']:
+        return None, None, None
+
     car_traffic = int(int(road_properties['car_traffic_daily']) * 0.11)
     truck_traffic = int(int(road_properties['truck_traffic_daily']) * 0.08)
     max_speed = int(road_properties['max_speed'])
 
-    return car_traffic, truck_traffic, max_speed
+    return max_speed, car_traffic, truck_traffic
+
+
+def get_train_track_data(road_properties):
+    if not road_properties['eisenbahn']:
+        return None, None, None, None
+
+    train_speed = road_properties['train_speed']
+    train_per_hour = int(road_properties['trains_per_day']) * 0.1
+    ground_type = road_properties['ground_type']
+    has_anti_vibration = road_properties['has_anti_vibration']
+
+    return train_speed, train_per_hour, ground_type, has_anti_vibration
 
 
 def get_road_queries():
@@ -67,7 +91,6 @@ def get_road_queries():
     for feature in features:
         id = feature['properties']['id']
         road_type = get_road_type(feature['properties'])
-        car_traffic, truck_traffic, max_speed = get_traffic_data(feature['properties'])
         coordinates = feature['geometry']['coordinates']
 
         # input road type might not be defined. road is not imported # TODO consider using a fallback
@@ -86,7 +109,13 @@ def get_road_queries():
             # build string containing all coordinates
 
         geom = wkt.dumps(feature['geometry'], decimals=0)
-        road_info = RoadInfo.RoadInfo(id, road_type, start_point, end_point, max_speed, car_traffic, truck_traffic, geom)
+
+        max_speed, car_traffic, truck_traffic = get_car_traffic_data(feature['properties'])
+        train_speed, train_per_hour, ground_type, has_anti_vibration = get_train_track_data(feature['properties'])
+
+        road_info = RoadInfo.RoadInfo(id, geom, road_type, start_point, end_point, max_speed, car_traffic,
+                                      truck_traffic,
+                                      train_speed, train_per_hour, ground_type, has_anti_vibration)
         all_roads.append(road_info)
 
     nodes = create_nodes(all_roads)
@@ -105,13 +134,29 @@ def get_traffic_queries():
     for road in all_roads:
         node_from = get_node_for_point(road.get_start_point(), nodes)
         node_to = get_node_for_point(road.get_end_point(), nodes)
-        traffic_cars = road.get_car_traffic()
-        traffic_trucks = road.get_truck_traffic()
-        max_speed = road.get_max_speed()
 
-        sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
-                            "VALUES ({0},{1},43,42,{2},{3},{4});".format(node_from, node_to, max_speed, traffic_cars,
-                                                                         traffic_trucks)
+        if road.get_road_type_for_query() == noise_road_types['eisenbahn']:
+            # train traffic
+            train_speed = road.get_train_speed()
+            tw_per_hour = road.get_train_per_hour()
+            ground_type = road.get_ground_type_train_track()
+            has_anti_vibration = road.is_anti_vibration()
+
+            sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to, train_speed, tw_per_hour, groundType, has_anti_vibration) " \
+                                "VALUES ({0},{1},{2},{3},{4},{5});".format(
+                node_from, node_to, train_speed, tw_per_hour, ground_type, has_anti_vibration)
+        else:
+            # car traffic
+            traffic_cars = road.get_car_traffic()
+            traffic_trucks = road.get_truck_traffic()
+            max_speed = road.get_max_speed()
+            load_speed = max_speed * 0.9
+            junction_speed = max_speed * 0.85
+
+            sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount) " \
+                                "VALUES ({0},{1},{2},{3},{4},{5},{6});".format(node_from, node_to, load_speed,
+                                                                               junction_speed, max_speed, traffic_cars,
+                                                                               traffic_trucks)
         sql_insert_strings_noisy_roads.append(sql_insert_string)
 
     print("traffic queries")
@@ -156,10 +201,11 @@ def get_building_queries():
 # merges the design input for roads and the static road features
 # returns a list of geojson features containing all relevant roads
 def get_roads_features():
-    road_network = open_geojson(cwd+"/"+road_network_json)['features']
+    road_network = open_geojson(cwd + "/" + road_network_json)['features']
 
     if include_rail_road:
-        road_network.append(open_geojson(railroad_multi_line_json)['features'])
+        for feature in open_geojson(railroad_multi_line_json)['features']:
+            road_network.append(feature)
 
     return road_network
 
