@@ -138,13 +138,13 @@ def get_traffic_queries():
         if road.get_road_type_for_query() == noise_road_types['eisenbahn']:
             # train traffic
             train_speed = road.get_train_speed()
-            tw_per_hour = road.get_train_per_hour()
+            trains_per_hour = road.get_train_per_hour()
             ground_type = road.get_ground_type_train_track()
             has_anti_vibration = road.is_anti_vibration()
 
-            sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to, train_speed, tw_per_hour, groundType, has_anti_vibration) " \
+            sql_insert_string = "INSERT INTO roads_traffic (node_from,node_to, train_speed, trains_per_hour, ground_type, has_anti_vibration) " \
                                 "VALUES ({0},{1},{2},{3},{4},{5});".format(
-                node_from, node_to, train_speed, tw_per_hour, ground_type, has_anti_vibration)
+                node_from, node_to, train_speed, trains_per_hour, ground_type, has_anti_vibration)
         else:
             # car traffic
             traffic_cars = road.get_car_traffic()

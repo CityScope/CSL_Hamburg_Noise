@@ -2,13 +2,14 @@
 from __future__ import print_function
 import os
 
-from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
+from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries, get_railroad_geom
 from config_loader import get_config
 
 try:
     import psycopg2
 except ImportError:
-    print("Did you start the database? Go to /orbisgis_java and Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
+    print(
+        "Did you start the database? Go to /orbisgis_java and Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
     print("Module psycopg2 is missing, cannot connect to PostgreSQL")
     exit(1)
 
@@ -26,6 +27,7 @@ def get_settings():
         'sound_diffraction_order': 0,  # the higher the less accurate
         'wall_absorption': 0.23,  # the higher the less accurate
     }
+
 
 # Feeds the geodatabase with the design data and performs the noise computation
 # Returns the path of the resulting geojson
@@ -63,25 +65,39 @@ def execute_scenario(cursor):
     print("Make traffic information table..")
     cursor.execute("""
     drop table if exists roads_traffic;
-    create table roads_traffic ( node_from INTEGER, node_to INTEGER, load_speed DOUBLE, junction_speed DOUBLE, max_speed DOUBLE, lightVehicleCount DOUBLE, heavyVehicleCount DOUBLE);
+     create table roads_traffic ( 
+	node_from INTEGER,
+	node_to INTEGER,
+	load_speed DOUBLE,
+	junction_speed DOUBLE,
+	max_speed DOUBLE,
+	lightVehicleCount DOUBLE,
+	heavyVehicleCount DOUBLE,
+	train_speed DOUBLE,
+	trains_per_hour DOUBLE,
+	ground_type INTEGER,
+	has_anti_vibration BOOLEAN
+	);
     """)
+
     traffic_queries = get_traffic_queries()
     for traffic_query in traffic_queries:
         cursor.execute("""{0}""".format(traffic_query))
 
     print("Duplicate geometries to give sound level for each traffic direction..")
 
+
+
     cursor.execute("""
     drop table if exists roads_dir_one;
     drop table if exists roads_dir_two;
-    CREATE TABLE roads_dir_one AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount FROM roads_geom as geo,roads_traffic traff WHERE geo.node_from=traff.node_from AND geo.node_to=traff.node_to;
-    CREATE TABLE roads_dir_two AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount FROM roads_geom as geo,roads_traffic traff WHERE geo.node_to=traff.node_from AND geo.node_from=traff.node_to;
+    CREATE TABLE roads_dir_one AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount, train_speed, trains_per_hour, ground_type, has_anti_vibration FROM roads_geom as geo,roads_traffic traff WHERE geo.node_from=traff.node_from AND geo.node_to=traff.node_to;
+    CREATE TABLE roads_dir_two AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount, train_speed, trains_per_hour, ground_type, has_anti_vibration FROM roads_geom as geo,roads_traffic traff WHERE geo.node_to=traff.node_from AND geo.node_from=traff.node_to;
     -- Collapse two direction in one table
     drop table if exists roads_geo_and_traffic;
     CREATE TABLE roads_geo_and_traffic AS select * from roads_dir_one UNION select * from roads_dir_two;""")
 
     print("Compute the sound level for each segment of roads..")
-
 
     # todo ADD railroad as a road with tram traffic. using BTW_EvalSource for the rail_road
     # https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-h2/src/main/java/org/orbisgis/noisemap/h2/BTW_EvalSource.java
@@ -91,11 +107,19 @@ def execute_scenario(cursor):
     # todo railroad_geom = wkt.dumps(feature['geometry'], decimals=0) of railroad?
     # todo make fucntino get railroad features (geom , speed, ...) in query builder
 
+    railroad_geom = get_railroad_geom()
+
+
     cursor.execute("""
     drop table if exists roads_src_global;
-    CREATE TABLE roads_src_global AS SELECT the_geom,BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False) as db_m from roads_geo_and_traffic;
-    INSERT INTO roads_src_global AS SELECT the_geom, BTW_EvalSource(double speed, double tw_per_hour, int groundType, boolean has_anti_vibration)
-    """)
+    CREATE TABLE roads_src_global AS SELECT the_geom, 
+    CASEWHEN(
+        road_type = 99,
+        BTW_EvalSource(train_speed, trains_per_hour, ground_type, has_anti_vibration),
+        -- BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False),
+        BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False)
+        ) as db_m from roads_geo_and_traffic;
+	""")
 
     print("Apply frequency repartition of road noise level..")
 
@@ -147,14 +171,15 @@ def execute_scenario(cursor):
     create table simple_noise_map as select ST_SIMPLIFYPRESERVETOPOLOGY(the_geom, 2) the_geom, idiso, CELL_ID from multipolygon_iso;
     drop table if exists contouring_noise_map;
     create table CONTOURING_NOISE_MAP as select ST_Transform(ST_SETSRID(the_geom,{0}),{1}),idiso, CELL_ID from ST_Explode('simple_noise_map'); 
-    drop table simple_noise_map; drop table multipolygon_iso;""".format(get_config()['CITY_SCOPE']['LOCAL_EPSG'],get_config()['CITY_SCOPE']['OUTPUT_EPSG']))
+    drop table simple_noise_map; drop table multipolygon_iso;""".format(get_config()['CITY_SCOPE']['LOCAL_EPSG'],
+                                                                        get_config()['CITY_SCOPE']['OUTPUT_EPSG']))
 
     cwd = os.path.dirname(os.path.abspath(__file__))
 
     # export result from database to geojson
     # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
     name = 'noise_result'
-    geojson_path = os.path.abspath(cwd+"/results/" + str(name) + ".geojson")
+    geojson_path = os.path.abspath(cwd + "/results/" + str(name) + ".geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
@@ -164,7 +189,6 @@ def execute_scenario(cursor):
 # starts the computation
 # returns the path of the resulting file
 def compute_noise_propagation():
-
     # TODO: invoke db from subprocess if not running
     # Define our connection string
     # db name has to be an absolute path
@@ -196,6 +220,8 @@ def compute_noise_propagation():
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_EvalSource FOR \"org.orbisgis.noisemap.h2.BR_EvalSource.evalSource\";")
     cursor.execute(
+        "CREATE ALIAS IF NOT EXISTS BTW_EvalSource FOR \"org.orbisgis.noisemap.h2.BTW_EvalSource.evalSource\";")
+    cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_SpectrumRepartition FOR \"org.orbisgis.noisemap.h2.BR_SpectrumRepartition.spectrumRepartition\";")
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid FOR \"org.orbisgis.noisemap.h2.BR_TriGrid.noisePropagation\";")
@@ -217,4 +243,3 @@ if __name__ == "__main__":
     # by adjustiong: https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
     # by shifting to GB center
     #   https: // github.com / Ifsttar / NoiseModelling / blob / master / noisemap - core / src / main / java / org / orbisgis / noisemap / core / jdbc / JdbcNoiseMap.java  # L68
-
