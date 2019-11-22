@@ -30,7 +30,7 @@ noise_road_types = {
     "hauptverkehrsstrasse": 56,  # in boulevard 70km/h
     "hauptsammelstrasse": 53,  # extra boulevard Street 50km/h
     "anliegerstrasse": 54,  # extra boulevard Street <50km/,
-    "eisenbahn": 99  # railroad # TODO gets treated as 56 in sql queries due to missing info on how to handle railroads
+    "eisenbahn": 99  # railroad
 }
 
 all_roads = []
@@ -40,15 +40,6 @@ all_roads = []
 def open_geojson(path):
     with open(path) as f:
         return json.load(f)
-
-
-# TODO get more railroads?
-def get_railroad_geom():
-    railroad_json = open_geojson(railroad_multi_line_json)
-
-    geom = wkt.dumps(railroad_json['features'][0]['geometry'], decimals=0)
-
-    return geom
 
 
 # extract traffic data from road properties
@@ -71,13 +62,13 @@ def get_car_traffic_data(road_properties):
 
     return max_speed, car_traffic, truck_traffic
 
-
+# source for train track data = http://laermkartierung1.eisenbahn-bundesamt.de/mb3/app.php/application/eba
 def get_train_track_data(road_properties):
     if not road_properties['eisenbahn']:
         return None, None, None, None
 
     train_speed = road_properties['train_speed']
-    train_per_hour = int(road_properties['trains_per_day']) * 0.1
+    train_per_hour = int(road_properties['trains_per_day']) * 0.1  # assume max traffic per hour is 10% of daily traffic
     ground_type = road_properties['ground_type']
     has_anti_vibration = road_properties['has_anti_vibration']
 
@@ -159,8 +150,6 @@ def get_traffic_queries():
                                                                                traffic_trucks)
         sql_insert_strings_noisy_roads.append(sql_insert_string)
 
-    print("traffic queries")
-    print(sql_insert_strings_noisy_roads)
     return sql_insert_strings_noisy_roads
 
 
@@ -211,8 +200,6 @@ def get_roads_features():
 
 
 # create nodes for all roads - nodes are connection points of roads
-# TODO: do not connect railway and roads
-# TODO : do not connect ends of multilinestring
 def create_nodes(all_roads):
     nodes = []
     for road in all_roads:

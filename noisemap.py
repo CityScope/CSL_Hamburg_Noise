@@ -2,7 +2,7 @@
 from __future__ import print_function
 import os
 
-from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries, get_railroad_geom
+from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 from config_loader import get_config
 
 try:
@@ -85,9 +85,6 @@ def execute_scenario(cursor):
         cursor.execute("""{0}""".format(traffic_query))
 
     print("Duplicate geometries to give sound level for each traffic direction..")
-
-
-
     cursor.execute("""
     drop table if exists roads_dir_one;
     drop table if exists roads_dir_two;
@@ -99,31 +96,21 @@ def execute_scenario(cursor):
 
     print("Compute the sound level for each segment of roads..")
 
-    # todo ADD railroad as a road with tram traffic. using BTW_EvalSource for the rail_road
-    # https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-h2/src/main/java/org/orbisgis/noisemap/h2/BTW_EvalSource.java
-    #
-    # Insert statement for rail - hardcoded
-
-    # todo railroad_geom = wkt.dumps(feature['geometry'], decimals=0) of railroad?
-    # todo make fucntino get railroad features (geom , speed, ...) in query builder
-
-    railroad_geom = get_railroad_geom()
-
-
+    # compute the power of the noise source and add it to the table roads_src_global
+    # for railroads (road_type = 99) use the function BTW_EvalSource (TW = Tramway)
+    # for car roads use the function BR_EvalSource
     cursor.execute("""
     drop table if exists roads_src_global;
     CREATE TABLE roads_src_global AS SELECT the_geom, 
     CASEWHEN(
         road_type = 99,
         BTW_EvalSource(train_speed, trains_per_hour, ground_type, has_anti_vibration),
-        -- BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False),
         BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False)
         ) as db_m from roads_geo_and_traffic;
 	""")
 
     print("Apply frequency repartition of road noise level..")
 
-    # TODO BR_Spect and BTW_spec seems to be identical
     cursor.execute("""
     drop table if exists roads_src;
     CREATE TABLE roads_src AS SELECT the_geom,

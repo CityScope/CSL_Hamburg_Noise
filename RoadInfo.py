@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
-# TODO make getter for road type specific traffic data etc
+
+# Can be Railroad or road for cars
 class RoadInfo:
     # defining constructor
     def __init__(self, road_id, geom, road_type, start_point, end_point, max_speed, car_traffic, truck_traffic,
@@ -10,9 +11,11 @@ class RoadInfo:
         self.road_type = road_type
         self.start_point = start_point
         self.end_point = end_point
+        # car raod specific into
         self.max_speed = max_speed
         self.car_traffic = car_traffic
         self.truck_traffic = truck_traffic
+        # railroad specific data
         self.train_speed = train_speed
         self.train_per_hour = train_per_hour
         self.ground_type_train_track = ground_type
