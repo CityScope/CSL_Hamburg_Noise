@@ -23,7 +23,7 @@ buildings_json = config['NOISE_SETTINGS']['INPUT_JSON_BUILDINGS']
 
 # static input data
 road_network_json = config['NOISE_SETTINGS']['INPUT_JSON_ROAD_NETWORK']
-railroad_multi_line_json = os.path.abspath(cwd + '/input_geojson/static/roads/railroad.json')
+railroad_multi_line_json = os.path.abspath(cwd + '/input_geojson/static/roads/railroads.json')
 
 # road names from julias shapefile : road_type_ids from IffStar NoiseModdeling
 noise_road_types = {
@@ -68,7 +68,7 @@ def get_train_track_data(road_properties):
         return None, None, None, None
 
     train_speed = road_properties['train_speed']
-    train_per_hour = int(road_properties['trains_per_day']) * 0.1  # assume max traffic per hour is 10% of daily traffic
+    train_per_hour = road_properties['trains_per_hour']
     ground_type = road_properties['ground_type']
     has_anti_vibration = road_properties['has_anti_vibration']
 
