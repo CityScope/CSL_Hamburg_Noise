@@ -82,6 +82,7 @@ if __name__ == "__main__":
                 # Also post result to cityIO
                 print("trying to post to cityIO")
                 sendToCityIO(resultdata, int(args.endpoint), token)
+            last_table_id = gridHash
         else:
             print("No changes in grid")
             time.sleep(5)
