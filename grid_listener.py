@@ -58,14 +58,14 @@ if __name__ == "__main__":
         token=None
 
     config = get_config()
-    result_post_url = config['CITY_SCOPE']['TABLE_URL_RESULT_POST']
 
     last_table_id = 0
 
-    if args.endpoint == "-1":
+    if int(args.endpoint) == -1:
         cityIO_url = config['CITY_SCOPE']['TABLE_URL_INPUT']
     else:
         cityIO_url = json.loads(config['CITY_SCOPE']['TABLE_URL_INPUT_LIST'])[int(args.endpoint)]
+    print("using cityIO at",cityIO_url)
 
     while True:        
         grid_has_changed, gridHash = check_for_grid_changes(cityIO_url, last_table_id)
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
                 # Also post result to cityIO
                 print("trying to post to cityIO")
-                # sendToCityIO(resultdata, int(args.endpoint), token)
+                sendToCityIO(resultdata, int(args.endpoint), token)
         else:
             print("No changes in grid")
             time.sleep(5)

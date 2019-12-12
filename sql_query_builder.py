@@ -160,6 +160,8 @@ def get_building_queries():
     sql_insert_strings_all_buildings = []
 
     for feature in data['features']:
+        if not "coordinates" in feature['geometry']:
+            continue
         for polygon in feature['geometry']['coordinates']:
             polygon_string = ''
             for coordinates_list in polygon:
