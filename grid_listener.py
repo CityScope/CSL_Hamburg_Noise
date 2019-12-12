@@ -74,6 +74,7 @@ if __name__ == "__main__":
             save_buildings_from_city_scope(cityIO_url)
             # start noise calculation
             noise_result_address = perform_noise_calculation()
+            last_table_id = gridHash
 
             with open(noise_result_address) as f:
                 resultdata = json.load(f)
@@ -82,7 +83,6 @@ if __name__ == "__main__":
                 # Also post result to cityIO
                 print("trying to post to cityIO")
                 sendToCityIO(resultdata, int(args.endpoint), token)
-            last_table_id = gridHash
         else:
             print("No changes in grid")
             time.sleep(5)
