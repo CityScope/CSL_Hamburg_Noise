@@ -9,8 +9,8 @@ from shapely.ops import cascaded_union
 from config_loader import get_config
 
 # local imports
-import CityScopeTable
-import GridCell
+from city_scope import CityScopeTable
+from city_scope import GridCell
 
 
 # creates a list of cells with spatial properties and CityScope information
@@ -128,10 +128,9 @@ def merge_adjacent_buildings(geo_json):
 
 
 # collects the data from city io, transforms into a geojson and saves that geojson as input for the noise calculation
-def save_buildings_from_city_scope():
+def save_buildings_from_city_scope(city_scope_address):
     config = get_config()
 
-    city_scope_address = config['CITY_SCOPE']['TABLE_URL_INPUT']
     # if the table origin is flipped to teh southeast, instead of regular northwest
     table_flipped = config['CITY_SCOPE'].getboolean('TABLE_FLIPPED')
 
@@ -147,4 +146,5 @@ def save_buildings_from_city_scope():
 
 
 if __name__ == "__main__":
-    save_buildings_from_city_scope()
+    config = get_config()
+    save_buildings_from_city_scope(config['CITY_SCOPE']['TABLE_URL_INPUT'])

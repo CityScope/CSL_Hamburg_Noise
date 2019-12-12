@@ -16,4 +16,5 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-CMD ["sh", "start_noise_module.sh"]
+ENTRYPOINT ["sh", "start_noise_module.sh"]
+CMD []
