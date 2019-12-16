@@ -10,10 +10,6 @@
 project_log_andre
 access_token.txt
 
-#Calculation result shapefiles
-results/*
-input_geojson/*
-
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml

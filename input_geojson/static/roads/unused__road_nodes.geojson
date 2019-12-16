@@ -1,0 +1,22 @@
+{
+"type": "FeatureCollection",
+"name": "road_nodes",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::25832" } },
+"features": [
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 567827.851164953201078, 5932218.639718377031386 ] } },
+{ "type": "Feature", "properties": { }, "geometry": null },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 567389.862717431969941, 5931412.392327416688204 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 567141.922435361077078, 5931528.56385699659586 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 567141.922435361077078, 5931528.56385699659586 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 566839.901570330956019, 5930962.906303286552429 ] } },
+{ "type": "Feature", "properties": { }, "geometry": null },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 565585.078564300085418, 5931274.765620922669768 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 567116.173238139832392, 5930911.007174385711551 ] } },
+{ "type": "Feature", "properties": { }, "geometry": null },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 566839.901570330956019, 5930962.906303286552429 ] } },
+{ "type": "Feature", "properties": { }, "geometry": null },
+{ "type": "Feature", "properties": { }, "geometry": null },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 567116.173238139832392, 5930911.007174385711551 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 567115.815517757437192, 5930910.350226006470621 ] } }
+]
+}

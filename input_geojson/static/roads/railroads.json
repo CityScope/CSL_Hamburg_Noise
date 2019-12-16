@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "railroad",
+"features": [
+{ "type": "Feature", "id": 0, "properties": { "eisenbahn": 1, "fuss": 0, "hauptverk": 0, "sonderform": 0, "hauptsaml": 0, "anlieger": 0, "id": 101, "name": "eisenbahn", "train_speed": 80, "trains_per_hour": 26, "ground_type": 1, "has_anti_vibration": false }, "geometry": { "type": "LineString", "coordinates": [ [ 567865.297493708669208, 5932201.699259569868445 ], [ 567418.844723781803623, 5931364.285024452023208 ], [ 567310.384446341893636, 5931152.409133639186621 ], [ 567146.432864165399224, 5930743.791344215162098 ] ] } },
+{ "type": "Feature", "properties": { "eisenbahn": 1, "fuss": 0, "hauptverk": 0, "sonderform": 0, "hauptsaml": 0, "anlieger": 0, "id": 102, "name": "eisenbahn", "train_speed": 80, "trains_per_hour": 26, "ground_type": 1, "has_anti_vibration": false }, "geometry": { "type": "LineString", "coordinates": [ [ 567867.95231901074294, 5932198.838592941872776 ], [ 567421.499549083877355, 5931361.424357824027538 ], [ 567313.039271643967368, 5931149.548467011190951 ], [ 567149.087689467472956, 5930740.930677587166429 ] ] } },
+{ "type": "Feature", "properties": { "eisenbahn": 1, "fuss": 0, "hauptverk": 0, "sonderform": 0, "hauptsaml": 0, "anlieger": 0, "id": 103, "name": "eisenbahn", "train_speed": 80, "trains_per_hour": 26, "ground_type": 1, "has_anti_vibration": false }, "geometry": { "type": "LineString", "coordinates": [ [ 567871.710242699133232, 5932195.840698762796819 ], [ 567425.257472772267647, 5931358.426463644951582 ], [ 567316.79719533235766, 5931146.550572832114995 ], [ 567152.845613155863248, 5930737.932783408090472 ] ] } }
+]
+}

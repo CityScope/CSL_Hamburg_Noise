@@ -18,14 +18,17 @@ For conversion of shapefiles into geoJson
 The computation is based on the geojson files in the `input_geojson` directory. 
 Geojsons can be derived from the shapefiles in the `input_shape` directory using the `shp_to_geojson.py` script.
 ## The input data is classified into 2 categories
-- 1 static input data: upper main road, lower main road and railroad 
+- 1 static input data in input_geosjon/static/roads: roads_network.json, railroads.json
    these are fix inputs of the noise environment that cannot be changed in competition entries
-- 2 design input data: the proposed road network and the proposed buildings
-    these are inputs made by the architects with their competition entries
+- 2 design input data: The proposed buildings as geojson. Will be generated from cityScope grid
     
-## Start the H2 database and orbisGIS server server
+## Run as noise module as docker 
+If not installed yet: run ' sh ./install_docker.sh'
+If already installed run ' sh ./docker/run_docker.sh'
 
-Run  `java -cp "bin/*:bundle/*:sys-bundle/*" org.h2.tools.Server -pg -trace` inside the project folder
+## Start the CityScope noise module without docker
+
+Run 'start_noise_module.sh'
 
 ## Config.ini
 Chose the option of input detail
