@@ -160,14 +160,17 @@ def execute_scenario(cursor):
     -- create table CONTOURING_NOISE_MAP as select ST_Transform(ST_SETSRID(the_geom,{0}),{1}),idiso, CELL_ID from ST_Explode('simple_noise_map'); 
     create table CONTOURING_NOISE_MAP as select ST_Transform(ST_SETSRID(the_geom,{0}),{1}),idiso, CELL_ID from ST_Explode('multipolygon_iso'); 
     drop table multipolygon_iso;""".format(get_config()['CITY_SCOPE']['LOCAL_EPSG'],
-                                                                        get_config()['CITY_SCOPE']['OUTPUT_EPSG']))
+                                           get_config()['CITY_SCOPE']['OUTPUT_EPSG']))
 
     cwd = os.path.dirname(os.path.abspath(__file__))
 
     # export result from database to geojson
     # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
     name = 'noise_result'
-    geojson_path = os.path.abspath(cwd + "/results/" + str(name) + ".geojson")
+    results_folder = os.path.abspath(cwd + "/results/")
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+    geojson_path = os.path.abspath(results_folder + '/' + str(name) + ".geojson")
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
     return geojson_path
