@@ -128,14 +128,14 @@ def merge_adjacent_buildings(geo_json):
 
 
 # collects the data from city io, transforms into a geojson and saves that geojson as input for the noise calculation
-def save_buildings_from_city_scope(city_scope_address):
+def save_buildings_from_city_scope(endpoint=-1, token=None):
     config = get_config()
 
     # if the table origin is flipped to teh southeast, instead of regular northwest
     table_flipped = config['CITY_SCOPE'].getboolean('TABLE_FLIPPED')
 
     # dynamic input data from designer
-    table = CityScopeTable.CityScopeTable(city_scope_address, table_flipped)
+    table = CityScopeTable.CityScopeTable(table_flipped, endpoint, token)
     grid_of_cells = create_grid_of_cells(table)
     geo_json = create_buildings_json(table, grid_of_cells)
     geo_json_merged = merge_adjacent_buildings(geo_json)

@@ -4,11 +4,11 @@
 
 from shapely.geometry import Point
 import json
-import urllib
 import math
 import os
 import configparser
 import pyproj
+import cityio_socket
 
 
 # reprojects a point
@@ -23,12 +23,11 @@ def reproject_point(current_epsg, new_epsg, point):
 class CityScopeTable:
     # defining constructor
     # origin is the upper left corner
-    def __init__(self, address, table_flipped):
-        self.address = address
+    def __init__(self, table_flipped, endpoint=-1, token=None):
         self.table_flipped = table_flipped
 
         try:
-            self.result = json.load(urllib.urlopen(self.address))
+            self.result = cityio_socket.getCurrentState("", endpoint, token)
             self.start_cell_origin = (Point(self.result['header']['spatial']['longitude'], self.result['header']['spatial']['latitude']))
         # use local debugging table as fallback
         except:

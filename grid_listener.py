@@ -8,37 +8,7 @@ from noisemap import perform_noise_calculation
 from city_scope.parse_city_scope_table import save_buildings_from_city_scope
 from config_loader import get_config
 import argparse
-
-
-# check if grid data changed
-def check_for_grid_changes(table_url, last_id):
-    try:
-        hash_id = json.load(urllib.urlopen(table_url + '/meta/hashes/grid'))
-    except:
-        print('Cant access cityIO at',table_url)
-        hash_id = 0 # TODO: shouldn't this be last_id? in case, connection fails during later iterations?
-
-    grid_changed = (hash_id != last_id)
-
-    return grid_changed, hash_id
-
-def sendToCityIO(data, endpoint=-1, token=None):
-    config = get_config()
-    if endpoint == -1 or endpoint == None:
-        post_address = config['CITY_SCOPE']['TABLE_URL_RESULT_POST'] # default endpoint
-    else:
-        post_address = json.loads(config['CITY_SCOPE']['TABLE_URL_RESULT_POST_LIST'])[endpoint] # user endpoint
-
-    if token is None:
-        r = requests.post(post_address, json=data, headers={'Content-Type': 'application/json'})
-    else: # with authentication
-        r = requests.post(post_address, json=data, headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '+token})
-    print(r)
-    if not r.status_code == 200:
-        print("could not post result to cityIO", post_address)
-        print("Error code", r.status_code)
-    else:
-        print("Successfully posted to cityIO", post_address, r.status_code)
+import cityio_socket
 
 # checks for updates on the cityIO grid
 # If the grid changes the city-scope parser is called to create a new buildings.json
@@ -67,14 +37,14 @@ if __name__ == "__main__":
         cityIO_url = json.loads(config['CITY_SCOPE']['TABLE_URL_INPUT_LIST'])[int(args.endpoint)]
     print("using cityIO at",cityIO_url)
 
-    while True:        
-        grid_has_changed, gridHash = check_for_grid_changes(cityIO_url, last_table_id)
-        if grid_has_changed:
+    oldHash = ""
+    while True:      
+        gridHash = cityio_socket.getCurrentState("meta/hashes/grid", int(args.endpoint), token)  
+        if gridHash != {} and gridHash != oldHash:
             # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
             save_buildings_from_city_scope(cityIO_url)
             # start noise calculation
             noise_result_address = perform_noise_calculation()
-            last_table_id = gridHash
 
             with open(noise_result_address) as f:
                 resultdata = json.load(f)
@@ -82,7 +52,8 @@ if __name__ == "__main__":
 
                 # Also post result to cityIO
                 print("trying to post to cityIO")
-                sendToCityIO(resultdata, int(args.endpoint), token)
+                cityio_socket.sendToCityIO(resultdata, int(args.endpoint), token)
+            oldHash = gridHash
         else:
             print("No changes in grid")
             time.sleep(5)
