@@ -3,10 +3,8 @@
 import urllib
 import json
 import time
-import requests
 from noisemap import perform_noise_calculation
 from city_scope.parse_city_scope_table import save_buildings_from_city_scope
-from config_loader import get_config
 import argparse
 import cityio_socket
 
