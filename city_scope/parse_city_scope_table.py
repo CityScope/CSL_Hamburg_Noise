@@ -147,4 +147,4 @@ def save_buildings_from_city_scope(endpoint=-1, token=None):
 
 if __name__ == "__main__":
     config = get_config()
-    save_buildings_from_city_scope(config['CITY_SCOPE']['TABLE_URL_INPUT'])
+    save_buildings_from_city_scope()

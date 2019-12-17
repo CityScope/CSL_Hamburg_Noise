@@ -27,28 +27,19 @@ if __name__ == "__main__":
     except IOError:
         token=None
 
-    config = get_config()
-
-    last_table_id = 0
-
-    if int(args.endpoint) == -1:
-        cityIO_url = config['CITY_SCOPE']['TABLE_URL_INPUT']
-    else:
-        cityIO_url = json.loads(config['CITY_SCOPE']['TABLE_URL_INPUT_LIST'])[int(args.endpoint)]
-    print("using cityIO at",cityIO_url)
-
     oldHash = ""
+
     while True:      
         gridHash = cityio_socket.getCurrentState("meta/hashes/grid", int(args.endpoint), token)  
         if gridHash != {} and gridHash != oldHash:
             # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
-            save_buildings_from_city_scope(cityIO_url)
+            save_buildings_from_city_scope()
             # start noise calculation
             noise_result_address = perform_noise_calculation()
 
             with open(noise_result_address) as f:
                 resultdata = json.load(f)
-                resultdata["grid_hash"] = last_table_id # state of grid, the results are based on
+                resultdata["grid_hash"] = gridHash # state of grid, the results are based on
 
                 # Also post result to cityIO
                 print("trying to post to cityIO")
