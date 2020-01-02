@@ -10,6 +10,10 @@
 project_log_andre
 access_token.txt
 
+# tokens
+tokens.json
+token.txt
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml
