@@ -4,11 +4,11 @@
 
 from shapely.geometry import Point
 import json
-import urllib
 import math
 import os
-import configparser
+from config_loader import get_config
 import pyproj
+import cityio_socket
 
 
 # reprojects a point
@@ -23,12 +23,9 @@ def reproject_point(current_epsg, new_epsg, point):
 class CityScopeTable:
     # defining constructor
     # origin is the upper left corner
-    def __init__(self, address, table_flipped):
-        self.address = address
-        self.table_flipped = table_flipped
-
+    def __init__(self, endpoint=-1, token=None):
         try:
-            self.result = json.load(urllib.urlopen(self.address))
+            self.result = cityio_socket.getCurrentState("", endpoint, token)
             self.start_cell_origin = (Point(self.result['header']['spatial']['longitude'], self.result['header']['spatial']['latitude']))
         # use local debugging table as fallback
         except:
@@ -47,9 +44,9 @@ class CityScopeTable:
         # todo enter mapping to get street id
 
         # get projections from config.ini
-        config = configparser.ConfigParser()
-        file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        config.read(file_path + '/config.ini')
+        config = get_config()
+        # if the table origin is flipped to teh southeast, instead of regular northwest
+        self.table_flipped = config['CITY_SCOPE'].getboolean('TABLE_FLIPPED')
         self.origin_epsg = config['CITY_SCOPE']['GLOBAL_EPSG']
         self.local_epsg = config['CITY_SCOPE']['LOCAL_EPSG']
 

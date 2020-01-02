@@ -1,16 +1,14 @@
 #!/usr/bin/env python2.7
 
 # library imports
-import os
 import json
-import configparser
 from shapely.geometry import Polygon, mapping
 from shapely.ops import cascaded_union
-from config_loader import get_config
 
 # local imports
 from city_scope import CityScopeTable
 from city_scope import GridCell
+from config_loader import get_config
 
 
 # creates a list of cells with spatial properties and CityScope information
@@ -128,23 +126,17 @@ def merge_adjacent_buildings(geo_json):
 
 
 # collects the data from city io, transforms into a geojson and saves that geojson as input for the noise calculation
-def save_buildings_from_city_scope(city_scope_address):
-    config = get_config()
-
-    # if the table origin is flipped to teh southeast, instead of regular northwest
-    table_flipped = config['CITY_SCOPE'].getboolean('TABLE_FLIPPED')
-
+def save_buildings_from_city_scope(endpoint=-1, token=None):
     # dynamic input data from designer
-    table = CityScopeTable.CityScopeTable(city_scope_address, table_flipped)
+    table = CityScopeTable.CityScopeTable(endpoint, token)
     grid_of_cells = create_grid_of_cells(table)
     geo_json = create_buildings_json(table, grid_of_cells)
     geo_json_merged = merge_adjacent_buildings(geo_json)
 
     # save geojson
-    with open(config['NOISE_SETTINGS']['INPUT_JSON_BUILDINGS'], 'wb') as f:
+    with open(get_config()['NOISE_SETTINGS']['INPUT_JSON_BUILDINGS'], 'wb') as f:
         json.dump(geo_json_merged, f)
 
 
 if __name__ == "__main__":
-    config = get_config()
-    save_buildings_from_city_scope(config['CITY_SCOPE']['TABLE_URL_INPUT'])
+    save_buildings_from_city_scope()
