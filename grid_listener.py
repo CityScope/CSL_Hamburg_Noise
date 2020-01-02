@@ -44,7 +44,7 @@ if __name__ == "__main__":
         gridHash = cityio_socket.getCurrentState("meta/hashes/grid", int(args.endpoint), token)  
         if gridHash != {} and gridHash != oldHash:
             # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
-            save_buildings_from_city_scope()
+            save_buildings_from_city_scope(args.endpoint, token)
             # start noise calculation
             noise_result_address = perform_noise_calculation()
 
