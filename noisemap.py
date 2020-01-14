@@ -65,7 +65,6 @@ def calculate_noise_result(cursor):
         -- Insert 1 building from automated string
         INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
         """.format(building))
-        break
 
     print("Make roads table (just geometries and road type)..")
     cursor.execute("""
@@ -76,7 +75,6 @@ def calculate_noise_result(cursor):
     for road in roads_queries:
         print('road:', road)
         cursor.execute("""{0}""".format(road))
-        break
 
     print("Make traffic information table..")
     cursor.execute("""
@@ -99,7 +97,6 @@ def calculate_noise_result(cursor):
     traffic_queries = get_traffic_queries()
     for traffic_query in traffic_queries:
         cursor.execute("""{0}""".format(traffic_query))
-        break
 
     print("Duplicate geometries to give sound level for each traffic direction..")
     cursor.execute("""
