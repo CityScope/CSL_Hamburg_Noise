@@ -277,12 +277,9 @@ def perform_noise_calculation_and_get_result(psyco):
     # close connections to database
     print("closing cursor")
     psycopg2_cursor.close()
-    sleep(2)
 
-    print("closing conn")
+    print("closing database connection")
     conn.close()
-
-    (sleep(2))
 
     return noise_result
 

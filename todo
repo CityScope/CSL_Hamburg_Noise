@@ -1,8 +1,0 @@
-- make computation faster
-- parsing with geojson specs (polygon, multipolygon, )
-- create "real" geojsons following the specs
-
-- try traffic settings in config
-- try 3D propagation
-- night noise / day noise
-
