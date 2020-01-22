@@ -164,10 +164,30 @@ def get_building_queries():
             continue
         for polygon in feature['geometry']['coordinates']:
             polygon_string = ''
-            for coordinates_list in polygon:
+            if len(polygon[0]) > 2:
+                # multiple line strings in polygon (i.e. has holes)
+                for coordinates_list in polygon:
+                    line_string_coordinates = ''
+                    try:
+                        for coordinate_pair in coordinates_list:
+                            # append 0 to all coordinates for mock third dimension
+                            coordinate_string = str(coordinate_pair[0]) + ' ' + str(coordinate_pair[1]) + ' ' + str(0) + ','
+                            line_string_coordinates += coordinate_string
+                            # remove trailing comma of last coordinate
+                        line_string_coordinates = line_string_coordinates[:-1]
+                    except Exception as e:
+                        print("invalid json")
+                        print(e)
+                        print(feature)
+                        return ""
+                    # create a string containing a list of coordinates lists per linestring
+                    #   ('PolygonWithHole', 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(1 1, 1 2, 2 2, 2 1, 1 1))'),
+                    polygon_string += '(' + line_string_coordinates + '),'
+            else:
+                # only one linestring in polygon (i.e. no holes)
                 line_string_coordinates = ''
                 try:
-                    for coordinate_pair in coordinates_list:
+                    for coordinate_pair in polygon:
                         # append 0 to all coordinates for mock third dimension
                         coordinate_string = str(coordinate_pair[0]) + ' ' + str(coordinate_pair[1]) + ' ' + str(0) + ','
                         line_string_coordinates += coordinate_string
@@ -177,9 +197,8 @@ def get_building_queries():
                     print("invalid json")
                     print(e)
                     print(feature)
-                    exit()
+                    return ""
                 # create a string containing a list of coordinates lists per linestring
-                #   ('PolygonWithHole', 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(1 1, 1 2, 2 2, 2 1, 1 1))'),
                 polygon_string += '(' + line_string_coordinates + '),'
             # remove trailing comma of last line string
             polygon_string = polygon_string[:-1]
