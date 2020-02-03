@@ -1,17 +1,26 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
+
+import json
 import os
+from time import sleep
+import shlex, subprocess
 
 from sql_query_builder import get_building_queries, get_road_queries, get_traffic_queries
 from config_loader import get_config
 
-try:
-    import psycopg2
-except ImportError:
-    print(
-        "Did you start the database? Go to /orbisgis_java and Use: 'java -cp '"'bin/*:bundle/*:sys-bundle/*'"' org.h2.tools.Server -pg' in project folder")
-    print("Module psycopg2 is missing, cannot connect to PostgreSQL")
-    exit(1)
+
+def get_result_path():
+    cwd = get_cwd()
+
+    # export result from database to geojson
+    # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
+    name = 'noise_result'
+    results_folder = os.path.abspath(cwd + "/results/")
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+
+    return os.path.abspath(results_folder + '/' + str(name) + ".geojson")
 
 
 # Returns computation settings
@@ -31,7 +40,12 @@ def get_settings():
 
 # Feeds the geodatabase with the design data and performs the noise computation
 # Returns the path of the resulting geojson
-def execute_scenario(cursor):
+def get_cwd():
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+# calculates the noise propagation and returns a geojson containing isophones
+def calculate_noise_result(cursor):
     # Scenario sample
     # Sending/Receiving geometry data using odbc connection is very slow
     # It is advised to use shape file or other storage format, so use SHPREAD or FILETABLE sql functions
@@ -162,24 +176,23 @@ def execute_scenario(cursor):
     drop table multipolygon_iso;""".format(get_config()['CITY_SCOPE']['LOCAL_EPSG'],
                                            get_config()['CITY_SCOPE']['OUTPUT_EPSG']))
 
-    cwd = os.path.dirname(os.path.abspath(__file__))
+    cwd = get_cwd()
 
     # export result from database to geojson
     # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-    name = 'noise_result'
-    results_folder = os.path.abspath(cwd + "/results/")
-    if not os.path.exists(results_folder):
-        os.makedirs(results_folder)
-    geojson_path = os.path.abspath(results_folder + '/' + str(name) + ".geojson")
+
+    geojson_path = get_result_path()
     cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
 
-    return geojson_path
+    with open(geojson_path) as f:
+        resultdata = json.load(f)
+
+        return resultdata
 
 
 # invokes H2GIS functions in the database
-# starts the computation
-# returns the path of the resulting file
-def compute_noise_propagation():
+# returns the database cursor (psycopg2)
+def initiate_database_connection(psycopg2):
     # TODO: invoke db from subprocess if not running
     # Define our connection string
     # db name has to be an absolute path
@@ -200,8 +213,6 @@ def compute_noise_propagation():
     cursor.execute("CREATE ALIAS IF NOT EXISTS H2GIS_SPATIAL FOR \"org.h2gis.functions.factory.H2GISFunctions.load\";")
     cursor.execute("CALL H2GIS_SPATIAL();")
 
-    # TODO To make faster : not necesscary to initate every time??
-    # TODO : call "execute scenario" from grid listener?=
     # Init NoiseModelling functions
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_PtGrid3D FOR \"org.orbisgis.noisemap.h2.BR_PtGrid3D.noisePropagation\";")
@@ -219,16 +230,70 @@ def compute_noise_propagation():
     cursor.execute(
         "CREATE ALIAS IF NOT EXISTS BR_TriGrid3D FOR \"org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation\";")
 
-    # perform calculation
-    return execute_scenario(cursor)
+    return conn, cursor
 
 
-def perform_noise_calculation():
-    return compute_noise_propagation()
+def boot_h2_database_in_subprocess():
+    orbisgis_dir = get_cwd() + '/orbisgis_java/'
+
+    java_command = 'java -cp "bin/*:bundle/*:sys-bundle/*" org.h2.tools.Server -pg -trace'
+
+    args = shlex.split(java_command)
+    p = subprocess.Popen(args, cwd=orbisgis_dir)
+    print("ProcessID H2-database ", p.pid)
+
+    # allow time for database booting
+    sleep(2)
+
+    # database process is running
+    import_tries = 0
+    while p.poll() is None:
+        try:
+            import psycopg2
+        except ImportError:
+            print("Could not connect to database.")
+            print("Trying again in 5sec")
+            sleep(5)
+            import_tries += 1
+        # successful import continue with project
+        else:
+            print("Sucessfully imported psycopg2")
+            return p, psycopg2
+        # terminate database process in case something went wrong
+        finally:
+            if import_tries > 4:
+                stdout, stderr = p.communicate()
+                print("Could not import psycopg2, trouble with database process")
+                print(stdout, stderr)
+                p.terminate()
+
+
+def perform_noise_calculation_and_get_result(psyco):
+    conn, psycopg2_cursor = initiate_database_connection(psyco)
+
+    # get noise result as json
+    noise_result = calculate_noise_result(psycopg2_cursor)
+
+    # close connections to database
+    print("closing cursor")
+    psycopg2_cursor.close()
+
+    print("closing database connection")
+    conn.close()
+
+    return noise_result
 
 
 if __name__ == "__main__":
-    perform_noise_calculation()
+    h2_subprocess, psycopg2 = boot_h2_database_in_subprocess()
+
+    result = perform_noise_calculation_and_get_result(psycopg2)
+
+    print("Result geojson save in ", get_result_path())
+
+
+    # terminate database process as it constantly blocks memory
+    h2_subprocess.terminate()
 
     # Try to make noise computation even faster
     # by adjustiong: https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
