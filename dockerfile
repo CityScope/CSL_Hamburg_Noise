@@ -16,5 +16,5 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["sh", "start_noise_module.sh"]
+ENTRYPOINT ["python2", "-u", "grid_listener.py"]
 CMD []
