@@ -23,7 +23,7 @@ def getCurrentState(topic="", endpoint=-1, token=None):
         return r.json()
     
     except requests.exceptions.RequestException as e:
-        print("CityIO error while GETting!" + e)
+        print("CityIO error while GETting!" + str(e))
         return {}
 
 def sendToCityIO(data, endpoint=-1, token=None):
