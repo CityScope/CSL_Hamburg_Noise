@@ -1,6 +1,5 @@
 #!/usr/bin/env python2.7
 
-import urllib
 import json
 import time
 from noisemap import perform_noise_calculation_and_get_result, boot_h2_database_in_subprocess
