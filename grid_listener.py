@@ -3,7 +3,7 @@
 import json
 import time
 from noisemap import perform_noise_calculation_and_get_result, boot_h2_database_in_subprocess
-from city_scope.parse_city_scope_table import save_buildings_from_city_scope
+from city_scope.parse_city_scope_table import save_buildings_from_city_scope, add_roads_from_design
 import argparse
 import cityio_socket
 
@@ -31,6 +31,7 @@ if __name__ == "__main__":
 
             # get the data from cityIO, convert it to geojson and write it to config['SETTINGS']['INPUT_JSON_BUILDINGS']
             save_buildings_from_city_scope(args.endpoint, token)
+            add_roads_from_design(args.endpoint)
 
             # boot a h2_database server and import psycopg2 to connect to it
             h2_subprocess, psycopg2 = boot_h2_database_in_subprocess()

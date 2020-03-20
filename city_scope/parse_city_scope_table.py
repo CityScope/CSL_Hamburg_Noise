@@ -10,6 +10,10 @@ from city_scope import CityScopeTable
 from city_scope import GridCell
 from config_loader import get_config
 
+# opens a json from path
+def open_geojson(path):
+    with open(path) as f:
+        return json.load(f)
 
 # creates a list of cells with spatial properties and CityScope information
 def create_grid_of_cells(table):
@@ -138,5 +142,21 @@ def save_buildings_from_city_scope(endpoint=-1, token=None):
         json.dump(geo_json_merged, f)
 
 
-if __name__ == "__main__":
-    save_buildings_from_city_scope()
+def get_design_file_path(endpoint):
+    file_path = get_config()['NOISE_SETTINGS']['INPUT_JSON_ROAD_NETWORK']
+
+    file_path = file_path.split('.json')[0] + "_" + str(endpoint) + ".json"
+
+    return file_path
+
+def add_roads_from_design(endpoint=-1):
+    regional_road_network = open_geojson(get_config()['NOISE_SETTINGS']['INPUT_JSON_REGION_ROAD_NETWORK'])
+    local_road_design = open_geojson(get_design_file_path(endpoint))
+
+    # add regional streets to local design
+    for feature in regional_road_network['features']:
+        local_road_design['features'].append(feature)
+
+    # save geojson
+    with open(get_config()['NOISE_SETTINGS']['INPUT_JSON_ROAD_NETWORK'], 'wb') as f:
+        json.dump(local_road_design, f)

@@ -239,7 +239,8 @@ def boot_h2_database_in_subprocess():
     java_command = 'java -cp "bin/*:bundle/*:sys-bundle/*" org.h2.tools.Server -pg -trace'
 
     args = shlex.split(java_command)
-    p = subprocess.Popen(args, cwd=orbisgis_dir)
+    f = open("log.txt", "w+")
+    p = subprocess.Popen(args, cwd=orbisgis_dir, stdout=f)
     print("ProcessID H2-database ", p.pid)
 
     # allow time for database booting
